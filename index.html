@@ -5,7 +5,86 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Juego de Anime - Aventura RPG</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Estilo global */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f2f2f2;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+
+        header {
+            background-color: #ff7f50;
+            color: white;
+            padding: 20px;
+            width: 100%;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+
+        /* Estilos del botón */
+        button {
+            background-color: #ff7f50;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #e76f3c;
+        }
+
+        button:disabled {
+            background-color: #ddd;
+            cursor: not-allowed;
+        }
+
+        /* Sección de juego */
+        #game {
+            background-color: #fff;
+            width: 80%;
+            max-width: 600px;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+
+        #action-buttons {
+            margin-top: 20px;
+        }
+
+        footer {
+            margin-top: 40px;
+            font-size: 1rem;
+            color: #777;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -33,9 +112,88 @@
     </main>
 
     <footer>
-        <p>Hecho con ❤️ por tu Ssk~.</p>
+        <p>Hecho con ❤️ por tu nombre.</p>
     </footer>
 
-    <script src="main.js"></script>
+    <script>
+        // Variables globales
+        let gameStarted = false;
+        let playerPower = Math.floor(Math.random() * 100) + 1; // Poder aleatorio
+        let playerStatus = "neutral";
+
+        // Función para comenzar el juego
+        const startGameBtn = document.getElementById("start-game-btn");
+        startGameBtn.addEventListener("click", startGame);
+
+        function startGame() {
+            // Ocultar la pantalla de inicio y mostrar la del juego
+            document.getElementById("intro").style.display = "none";
+            document.getElementById("game").style.display = "block";
+            
+            // Establecer los poderes y la historia inicial
+            document.getElementById("character-info").innerHTML = `Tu poder es de ${playerPower} puntos.`;
+            createActionButtons();
+        }
+
+        // Función para crear botones de acción
+        function createActionButtons() {
+            const actionButtons = document.getElementById("action-buttons");
+
+            // Limpiar cualquier botón anterior
+            actionButtons.innerHTML = '';
+
+            // Crear opciones de acción basadas en el poder
+            let actionOptions = [
+                { text: "Atacar", action: attack },
+                { text: "Defender", action: defend },
+                { text: "Escapar", action: escape }
+            ];
+
+            // Si el poder es bajo, no se podrá atacar
+            if (playerPower < 30) {
+                actionOptions = actionOptions.filter(option => option.text !== "Atacar");
+            }
+
+            // Agregar los botones dinámicamente
+            actionOptions.forEach(option => {
+                const btn = document.createElement("button");
+                btn.textContent = option.text;
+                btn.addEventListener("click", option.action);
+                actionButtons.appendChild(btn);
+            });
+        }
+
+        // Función para atacar
+        function attack() {
+            playerPower -= 10; // Disminuye el poder tras un ataque
+            document.getElementById("character-info").innerHTML = `¡Atacaste! Tu poder actual es de ${playerPower} puntos.`;
+            checkGameOver();
+        }
+
+        // Función para defender
+        function defend() {
+            playerPower += 5; // Aumenta el poder al defender
+            document.getElementById("character-info").innerHTML = `Te defendiste. Tu poder actual es de ${playerPower} puntos.`;
+            checkGameOver();
+        }
+
+        // Función para escapar
+        function escape() {
+            document.getElementById("character-info").innerHTML = `Escapaste del combate. Tu poder actual es de ${playerPower} puntos.`;
+            checkGameOver();
+        }
+
+        // Función para verificar si el juego terminó
+        function checkGameOver() {
+            if (playerPower <= 0) {
+                document.getElementById("character-info").innerHTML = "¡Has perdido! Tu poder ha llegado a 0.";
+                document.getElementById("action-buttons").innerHTML = "";
+                return;
+            }
+            
+            // Si aún no se ha perdido, generar nuevas opciones
+            createActionButtons();
+        }
+    </script>
 </body>
-  </html>
+</html>
