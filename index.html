@@ -32,7 +32,7 @@
       width: 90%;
       max-width: 400px;
     }
-    input, select {
+    input {
       display: block;
       width: 100%;
       padding: 10px;
@@ -75,8 +75,8 @@
 
   <script>
     const supabase = supabase.createClient(
-      'https://pzabjxoagrofosujjkre.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6YWJqeG9hZ3JvZm9zdWpqa3JlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU5NjcxMDYsImV4cCI6MjA2MTU0MzEwNn0.6815i2mnv7a9zvxdEJdXFe2os5qCp2EEfQ7Kh1g6lnk'
+      'https://pzabjxoagrofosujjkre.supabase.co',  // Asegúrate de que esta URL sea correcta
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6YWJqeG9hZ3JvZm9zdWpqa3JlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU5NjcxMDYsImV4cCI6MjA2MTU0MzEwNn0.6815i2mnv7a9zvxdEJdXFe2os5qCp2EEfQ7Kh1g6lnk'  // Verifica también que esta clave sea correcta
     );
 
     const form = document.getElementById('register-form');
@@ -86,21 +86,25 @@
       e.preventDefault();
       const email = document.getElementById('email').value;
 
-      const { data, error: signupError } = await supabase.auth.signUp({
-        email,
-        options: {
-          emailRedirectTo: 'https://uuuierk.vercel.app/Activate.html'  // Reemplaza con tu URL de activación
-        }
-      });
+      try {
+        const { data, error: signupError } = await supabase.auth.signUp({
+          email,
+          options: {
+            emailRedirectTo: 'https://uuuierk.vercel.app/Activate.html'  // Aquí se redirige después de la activación
+          }
+        });
 
-      // Si hay un error en el registro, lo mostramos aquí
-      if (signupError) {
-        message.textContent = `Error en el registro: ${signupError.message}`;
-        message.classList.add('error');
-      } else {
-        // Si no hubo error, mostramos un mensaje de éxito
+        if (signupError) {
+          throw new Error(signupError.message);  // Lanzamos un error si ocurre algún problema
+        }
+
         message.textContent = '¡Revisa tu correo para activar tu cuenta!';
-        message.classList.remove('error');
+        message.classList.remove('error');  // Removemos el estilo de error
+        message.classList.add('message');  // Agregamos estilo de mensaje
+
+      } catch (error) {
+        message.textContent = `Error: ${error.message}`;  // Mostramos el mensaje de error
+        message.classList.add('error');  // Aplicamos el estilo de error
       }
     });
   </script>
