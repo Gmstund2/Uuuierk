@@ -45,24 +45,26 @@
     const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
     async function crearJugador() {
-      const { data, error } = await supabase
-        .from("jugadores")
-        .insert([
-          {
-            nombres: "Kaito",
-            nivel_de_poder: 1,
-            poderes: [{ nombre: "Fuego interior", tipo: "elemental" }],
-            historia: [{ evento: "inicio", lugar: "pueblo" }],
-            decisiones: [],
-          }
-        ]);
+      try {
+        const jugador = {
+          nombres: "Kaito",
+          nivel_de_poder: 1,
+          poderes: [{ nombre: "Fuego interior", tipo: "elemental" }],
+          historia: [{ evento: "inicio", lugar: "pueblo" }],
+          decisiones: []
+        };
 
-      if (error) {
-        console.error("Error al crear jugador:", error);
-        alert("Ocurrió un error al crear el jugador.");
-      } else {
-        console.log("Jugador creado:", data);
-        alert("¡Jugador creado exitosamente!");
+        const { data, error } = await supabase
+          .from("jugadores")
+          .insert([jugador]);
+
+        if (error) {
+          alert("Error: " + JSON.stringify(error));
+        } else {
+          alert("Jugador creado: " + JSON.stringify(data));
+        }
+      } catch (e) {
+        alert("Excepción: " + e.message);
       }
     }
   </script>
