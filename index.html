@@ -81,59 +81,64 @@
     <button type="submit">Registrarse</button>
     <div class="message" id="message"></div>
   </form>
+<script>
+  const supabase = supabase.createClient(
+    'https://pzabjxoagrofosujjkre.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6YWJqeG9hZ3JvZm9zdWpqa3JlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU5NjcxMDYsImV4cCI6MjA2MTU0MzEwNn0.6815i2mnv7a9zvxdEJdXFe2os5qCp2EEfQ7Kh1g6lnk'
+  );
 
-  <script>
-    const supabase = supabase.createClient(
-      'https://pzabjxoagrofosujjkre.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6YWJqeG9hZ3JvZm9zdWpqa3JlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU5NjcxMDYsImV4cCI6MjA2MTU0MzEwNn0.6815i2mnv7a9zvxdEJdXFe2os5qCp2EEfQ7Kh1g6lnk'
-    );
+  const form = document.getElementById('register-form');
+  const message = document.getElementById('message');
 
-    const form = document.getElementById('register-form');
-    const message = document.getElementById('message');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const nombres = document.getElementById('nombres').value;
+    const username = document.getElementById('username').value;
+    const fecha = document.getElementById('fecha').value;
+    const genero = document.getElementById('genero').value;
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const nombres = document.getElementById('nombres').value;
-      const username = document.getElementById('username').value;
-      const fecha = document.getElementById('fecha').value;
-      const genero = document.getElementById('genero').value;
-
-      const { data, error: signupError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: 'https://uuuierk.vercel.app/Activate.html'
-        }
-      });
-
-      if (signupError) {
-        message.textContent = `Error: ${signupError.message}`;
-        message.style.color = '#ff8080';
-        return;
-      }
-
-      const userId = data.user?.id;
-
-      const { error: insertError } = await supabase.from('Jugadores').insert([{
-        ID: userId,
-        Nombres: nombres,
-        username,
-        Fecha_nacimiento: fecha,
-        Genero: genero,
-        Contrasena: password,
-        Fecha_actualizacion: new Date().toISOString()
-      }]);
-
-      if (insertError) {
-        message.textContent = `Error al guardar los datos: ${insertError.message}`;
-        message.style.color = '#ff8080';
-      } else {
-        message.textContent = 'Registro exitoso. Revisa tu correo para confirmar.';
-        form.reset();
+    const { data, error: signupError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: 'https://uuuierk.vercel.app/Activate.html'
       }
     });
-  </script>
+
+    if (signupError) {
+      message.textContent = `Error: ${signupError.message}`;
+      message.style.color = '#ff8080';
+      return;
+    }
+
+    const userId = data.user?.id;
+
+    if (!userId) {
+      message.textContent = 'Error: ID de usuario no disponible.';
+      message.style.color = '#ff8080';
+      return;
+    }
+
+    const { error: insertError } = await supabase.from('Jugadores').insert([{
+      ID: userId,
+      Nombres: nombres,
+      username,
+      Fecha_nacimiento: fecha,
+      Genero: genero,
+      Fecha_actualizacion: new Date().toISOString()
+    }]);
+
+    if (insertError) {
+      message.textContent = `Error al guardar los datos: ${insertError.message}`;
+      message.style.color = '#ff8080';
+    } else {
+      message.textContent = 'Registro exitoso. Revisa tu correo para confirmar.';
+      form.reset();
+    }
+  });
+</script>
+
 </body>
 </html>
