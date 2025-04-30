@@ -1,72 +1,74 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Kizuna no Unmei</title>
   <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #1a1a2e;
-      color: #f5f5f5;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 2rem;
-    }
-    h1 {
-      color: #ff4c60;
-    }
-    button {
-      padding: 10px 20px;
-      background-color: #ff4c60;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      cursor: pointer;
-      margin-top: 20px;
-    }
-    button:hover {
-      background-color: #ff2e47;
-    }
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
+    h1 { color: #333; }
+    input, button { padding: 8px; margin: 5px 0; width: 100%; max-width: 300px; }
+    .player-card { background: white; padding: 10px; margin-top: 10px; border-radius: 8px; box-shadow: 0 0 5px #ccc; }
   </style>
 </head>
 <body>
-  <h1>Kizuna no Unmei</h1>
-  <p>Bienvenido al mundo de los destinados. ¿Estás listo para empezar tu viaje?</p>
+
+  <h1>Crear Jugador</h1>
+  <input type="text" id="nombre" placeholder="Nombre del jugador" />
   <button onclick="crearJugador()">Crear jugador</button>
 
-  <!-- Supabase JS SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    const supabaseUrl = "https://pzabjxoagrofosujjkre.supabase.co";
-    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6YWJqeG9hZ3JvZm9zdWpqa3JlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU5NjcxMDYsImV4cCI6MjA2MTU0MzEwNn0.6815i2mnv7a9zvxdEJdXFe2os5qCp2EEfQ7Kh1g6lnk";
-    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+  <h2>Jugadores</h2>
+  <div id="jugadores"></div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+    const supabaseUrl = 'https://pzabjxoagrofosujjkre.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6YWJqeG9hZ3JvZm9zdWpqa3JlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU5NjcxMDYsImV4cCI6MjA2MTU0MzEwNn0.6815i2mnv7a9zvxdEJdXFe2os5qCp2EEfQ7Kh1g6lnk';
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     async function crearJugador() {
-      try {
-        const jugador = {
-          nombres: "Kaito",
-          nivel_de_poder: 1,
-          poderes: [{ nombre: "Fuego interior", tipo: "elemental" }],
-          historia: [{ evento: "inicio", lugar: "pueblo" }],
-          decisiones: []
-        };
+      const nombre = document.getElementById('nombre').value;
 
-        const { data, error } = await supabase
-          .from("jugadores")
-          .insert([jugador]);
+      const { data, error } = await supabase.from('jugadores').insert([{
+        Nombres: nombre,
+        Poderes: {},
+        Nivel_de_poder: 1,
+        Historia: {},
+        Decisiones: {},
+        Fecha_actualizacion: new Date().toISOString()
+      }]);
 
-        if (error) {
-          alert("Error: " + JSON.stringify(error));
-        } else {
-          alert("Jugador creado: " + JSON.stringify(data));
-        }
-      } catch (e) {
-        alert("Excepción: " + e.message);
+      if (error) {
+        alert('Error al crear jugador: ' + error.message);
+      } else {
+        alert('Jugador creado!');
+        document.getElementById('nombre').value = '';
+        obtenerJugadores();
       }
     }
+
+    async function obtenerJugadores() {
+      const { data, error } = await supabase.from('jugadores').select('*').order('Fecha_actualizacion', { ascending: false });
+
+      const container = document.getElementById('jugadores');
+      container.innerHTML = '';
+
+      if (error) {
+        container.innerText = 'Error al cargar jugadores';
+        return;
+      }
+
+      data.forEach(j => {
+        const div = document.createElement('div');
+        div.className = 'player-card';
+        div.innerHTML = `<strong>${j.Nombres}</strong><br>Nivel: ${j.Nivel_de_poder}`;
+        container.appendChild(div);
+      });
+    }
+
+    obtenerJugadores();
   </script>
+
 </body>
 </html>
