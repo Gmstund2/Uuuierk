@@ -32,7 +32,7 @@
       width: 90%;
       max-width: 400px;
     }
-    input, select {
+    input {
       display: block;
       width: 100%;
       padding: 10px;
@@ -65,80 +65,40 @@
 <body>
   <h1>Kizuna no Unmei</h1>
   <form id="register-form">
-    <input type="text" id="nombres" placeholder="Nombre completo" required />
-    <input type="text" id="username" placeholder="Nombre de usuario" required />
     <input type="email" id="email" placeholder="Correo electrónico" required />
-    <input type="password" id="password" placeholder="Contraseña" required />
-    <label for="fecha">Fecha de nacimiento</label>
-    <input type="date" id="fecha" required />
-    <label for="genero">Género</label>
-    <select id="genero">
-      <option value="">Selecciona tu género</option>
-      <option value="Masculino">Masculino</option>
-      <option value="Femenino">Femenino</option>
-      <option value="Otro">Otro</option>
-    </select>
-    <button type="submit">Registrarse</button>
+    <button type="submit">Recibir enlace mágico</button>
     <div class="message" id="message"></div>
   </form>
-<script>
-  const supabase = supabase.createClient(
-    'https://pzabjxoagrofosujjkre.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6YWJqeG9hZ3JvZm9zdWpqa3JlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU5NjcxMDYsImV4cCI6MjA2MTU0MzEwNn0.6815i2mnv7a9zvxdEJdXFe2os5qCp2EEfQ7Kh1g6lnk'
-  );
 
-  const form = document.getElementById('register-form');
-  const message = document.getElementById('message');
+  <script>
+    const supabase = supabase.createClient(
+      'https://pzabjxoagrofosujjkre.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6YWJqeG9hZ3JvZm9zdWpqa3JlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU5NjcxMDYsImV4cCI6MjA2MTU0MzEwNn0.6815i2mnv7a9zvxdEJdXFe2os5qCp2EEfQ7Kh1g6lnk'
+    );
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const nombres = document.getElementById('nombres').value;
-    const username = document.getElementById('username').value;
-    const fecha = document.getElementById('fecha').value;
-    const genero = document.getElementById('genero').value;
+    const form = document.getElementById('register-form');
+    const message = document.getElementById('message');
 
-    const { data, error: signupError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: 'https://uuuierk.vercel.app/Activate.html'
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+
+      const { error } = await supabase.auth.signInWithOtp({
+        email: email,
+        options: {
+          emailRedirectTo: 'https://uuuierk.vercel.app/Activate.html'
+        }
+      });
+
+      if (error) {
+        message.textContent = `Error: ${error.message}`;
+        message.style.color = '#ff8080';
+      } else {
+        message.textContent = '¡Revisa tu correo para confirmar tu cuenta!';
+        message.style.color = '#aaffaa';
+        form.reset();
       }
     });
-
-    if (signupError) {
-      message.textContent = `Error: ${signupError.message}`;
-      message.style.color = '#ff8080';
-      return;
-    }
-
-    const userId = data.user?.id;
-
-    if (!userId) {
-      message.textContent = 'Error: ID de usuario no disponible.';
-      message.style.color = '#ff8080';
-      return;
-    }
-
-    const { error: insertError } = await supabase.from('Jugadores').insert([{
-      ID: userId,
-      Nombres: nombres,
-      username,
-      Fecha_nacimiento: fecha,
-      Genero: genero,
-      Fecha_actualizacion: new Date().toISOString()
-    }]);
-
-    if (insertError) {
-      message.textContent = `Error al guardar los datos: ${insertError.message}`;
-      message.style.color = '#ff8080';
-    } else {
-      message.textContent = 'Registro exitoso. Revisa tu correo para confirmar.';
-      form.reset();
-    }
-  });
-</script>
-
+  </script>
 </body>
 </html>
