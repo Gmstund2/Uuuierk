@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kizuna no Unmei - Registro</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <style>
+<html lang="es">  
+<head>  
+  <meta charset="UTF-8" />  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />  
+  <title>Kizuna no Unmei - Registro</title>  
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>  
+  <style>  
     body {
       background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -35,8 +35,7 @@
       max-width: 400px;
     }
 
-    input,
-    select {
+    input {
       display: block;
       width: 100%;
       padding: 10px;
@@ -44,6 +43,16 @@
       border-radius: 8px;
       border: none;
       font-size: 1rem;
+    }
+
+    .gender-group {
+      display: flex;
+      justify-content: space-around;
+      margin: 15px 0;
+    }
+
+    .gender-group label {
+      font-size: 0.95rem;
     }
 
     button {
@@ -67,30 +76,23 @@
       margin-top: 10px;
       color: #aaffaa;
     }
-
-    .gender-select {
-      display: flex;
-      justify-content: space-around;
-    }
-
-    .gender-select input {
-      width: auto;
-    }
   </style>
 </head>
 <body>
-
   <h1>Kizuna no Unmei</h1>
   <form id="register-form">
     <input type="email" id="email" placeholder="Correo electrónico" required />
     <input type="password" id="password" placeholder="Contraseña" required />
-    <input type="date" id="fecha-nacimiento" required />
-    
-    <div class="gender-select">
+
+    <input type="date" id="fecha-nacimiento" placeholder="Fecha de nacimiento" required />
+
+    <div class="gender-group">
       <label><input type="radio" name="gender" value="Masculino" required /> Masculino</label>
       <label><input type="radio" name="gender" value="Femenino" required /> Femenino</label>
       <label><input type="radio" name="gender" value="Otro" required /> Otro</label>
     </div>
+
+    <input type="text" id="edad" placeholder="Edad" readonly />
 
     <button type="submit">Registrarse</button>
     <div class="message" id="message"></div>
@@ -104,13 +106,24 @@
 
     const form = document.getElementById('register-form');
     const message = document.getElementById('message');
+    const fechaNacimientoInput = document.getElementById('fecha-nacimiento');
+    const edadInput = document.getElementById('edad');
+
+    fechaNacimientoInput.addEventListener('change', () => {
+      const nacimiento = new Date(fechaNacimientoInput.value);
+      const hoy = new Date();
+      let edad = hoy.getFullYear() - nacimiento.getFullYear();
+      const mes = hoy.getMonth() - nacimiento.getMonth();
+      if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
+        edad--;
+      }
+      edadInput.value = edad;
+    });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
-      const fechaNacimiento = document.getElementById('fecha-nacimiento').value;
-      const gender = document.querySelector('input[name="gender"]:checked').value;
 
       const { error } = await supabase.auth.signUp({ email, password });
 
@@ -118,26 +131,8 @@
         message.textContent = `Error: ${error.message}`;
         message.style.color = '#ff8080';
       } else {
-        // Aquí puedes agregar más lógica para almacenar la fecha de nacimiento y el género
-        // Si quieres que esos datos se guarden en la base de datos puedes hacer una inserción a la tabla correspondiente
-
-        const { data, error: insertError } = await supabase
-          .from('Jugadores')
-          .insert([
-            {
-              email: email,
-              fecha_nacimiento: fechaNacimiento,
-              genero: gender
-            }
-          ]);
-
-        if (insertError) {
-          message.textContent = `Error al guardar datos: ${insertError.message}`;
-          message.style.color = '#ff8080';
-        } else {
-          message.textContent = 'Registro exitoso. Revisa tu correo para confirmar.';
-          form.reset();
-        }
+        message.textContent = 'Registro exitoso. Revisa tu correo para confirmar.';
+        form.reset();
       }
     });
   </script>
