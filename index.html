@@ -3,72 +3,104 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Kizuna no Unmei</title>
+  <title>Kizuna no Unmei - Registro de Jugadores</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
-    h1 { color: #333; }
-    input, button { padding: 8px; margin: 5px 0; width: 100%; max-width: 300px; }
-    .player-card { background: white; padding: 10px; margin-top: 10px; border-radius: 8px; box-shadow: 0 0 5px #ccc; }
+    body {
+      font-family: sans-serif;
+      background: #f3f3f3;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+    }
+
+    h1, h2 {
+      color: #333;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+    }
+
+    button {
+      background: #0070f3;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0059c1;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
   </style>
 </head>
 <body>
+  <div class="container">
+    <h1>Crear Jugador</h1>
+    <form id="player-form">
+      <input type="text" id="nombre" placeholder="Tu nombre" required />
+      <button type="submit">Registrar</button>
+    </form>
 
-  <h1>Crear Jugador</h1>
-  <input type="text" id="nombre" placeholder="Nombre del jugador" />
-  <button onclick="crearJugador()">Crear jugador</button>
+    <h2>Jugadores</h2>
+    <ul id="jugadores-lista"></ul>
+  </div>
 
-  <h2>Jugadores</h2>
-  <div id="jugadores"></div>
-
-  <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-
+  <script>
+    // Supabase config
     const supabaseUrl = 'https://pzabjxoagrofosujjkre.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6YWJqeG9hZ3JvZm9zdWpqa3JlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU5NjcxMDYsImV4cCI6MjA2MTU0MzEwNn0.6815i2mnv7a9zvxdEJdXFe2os5qCp2EEfQ7Kh1g6lnk';
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-    async function crearJugador() {
-      const nombre = document.getElementById('nombre').value;
-
-      const { data, error } = await supabase.from('jugadores').insert([{
-        Nombres: nombre,
-        Poderes: {},
-        Nivel_de_poder: 1,
-        Historia: {},
-        Decisiones: {},
-        Fecha_actualizacion: new Date().toISOString()
-      }]);
-
+    async function insertarJugador(nombre) {
+      const { data, error } = await supabase.from('Jugadores').insert([{ Nombres: nombre }]);
       if (error) {
-        alert('Error al crear jugador: ' + error.message);
+        alert('Error: ' + error.message);
       } else {
-        alert('Jugador creado!');
-        document.getElementById('nombre').value = '';
-        obtenerJugadores();
+        alert('¡Jugador creado!');
+        cargarJugadores();
       }
     }
 
-    async function obtenerJugadores() {
-      const { data, error } = await supabase.from('jugadores').select('*').order('Fecha_actualizacion', { ascending: false });
-
-      const container = document.getElementById('jugadores');
-      container.innerHTML = '';
-
+    async function cargarJugadores() {
+      const { data, error } = await supabase.from('Jugadores').select('*');
+      const lista = document.getElementById('jugadores-lista');
+      lista.innerHTML = '';
       if (error) {
-        container.innerText = 'Error al cargar jugadores';
+        alert('Error al cargar jugadores: ' + error.message);
         return;
       }
-
       data.forEach(j => {
-        const div = document.createElement('div');
-        div.className = 'player-card';
-        div.innerHTML = `<strong>${j.Nombres}</strong><br>Nivel: ${j.Nivel_de_poder}`;
-        container.appendChild(div);
+        const li = document.createElement('li');
+        li.textContent = j.Nombres;
+        lista.appendChild(li);
       });
     }
 
-    obtenerJugadores();
-  </script>
+    document.getElementById('player-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const nombre = document.getElementById('nombre').value.trim();
+      if (nombre) {
+        await insertarJugador(nombre);
+        document.getElementById('nombre').value = '';
+      }
+    });
 
+    cargarJugadores();
+  </script>
 </body>
 </html>
