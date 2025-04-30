@@ -1,129 +1,139 @@
-<!DOCTYPE html><html lang="es">  <head>  
-  <meta charset="UTF-8" />  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />  
-  <title>Kizuna no Unmei - Registro</title>  
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>  
-  <style>  
-    body {  
-      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);  
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;  
-      color: #fff;  
-      display: flex;  
-      flex-direction: column;  
-      align-items: center;  
-      justify-content: center;  
-      min-height: 100vh;  
-      margin: 0;  
-    }h1 {  
-  font-size: 2.5rem;  
-  margin-bottom: 10px;  
-  color: #ff66c4;  
-  text-shadow: 0 0 5px #ff66c4;  
-}  form {
-background: rgba(255, 255, 255, 0.05);
-border: 1px solid #ff66c4;
-border-radius: 12px;
-padding: 30px;
-box-shadow: 0 0 15px rgba(255, 102, 196, 0.4);
-width: 90%;
-max-width: 400px;
-}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kizuna no Unmei - Registro</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      color: #ff66c4;
+      text-shadow: 0 0 5px #ff66c4;
+    }
+    form {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid #ff66c4;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 0 15px rgba(255, 102, 196, 0.4);
+      width: 90%;
+      max-width: 400px;
+    }
+    input, select {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      margin: 15px 0;
+      border-radius: 8px;
+      border: none;
+      font-size: 1rem;
+    }
+    button {
+      background-color: #ff66c4;
+      color: #fff;
+      padding: 12px;
+      width: 100%;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 0 10px #ff66c4;
+    }
+    button:hover {
+      background-color: #ff33aa;
+    }
+    .message {
+      margin-top: 10px;
+      color: #aaffaa;
+    }
+  </style>
+</head>
+<body>
+  <h1>Kizuna no Unmei</h1>
+  <form id="register-form">
+    <input type="text" id="nombres" placeholder="Nombre completo" required />
+    <input type="text" id="username" placeholder="Nombre de usuario" required />
+    <input type="email" id="email" placeholder="Correo electrónico" required />
+    <input type="password" id="password" placeholder="Contraseña" required />
+    <label for="fecha">Fecha de nacimiento</label>
+    <input type="date" id="fecha" required />
+    <label for="genero">Género</label>
+    <select id="genero">
+      <option value="">Selecciona tu género</option>
+      <option value="Masculino">Masculino</option>
+      <option value="Femenino">Femenino</option>
+      <option value="Otro">Otro</option>
+    </select>
+    <button type="submit">Registrarse</button>
+    <div class="message" id="message"></div>
+  </form>
 
-input, select {
-display: block;
-width: 100%;
-padding: 10px;
-margin: 15px 0;
-border-radius: 8px;
-border: none;
-font-size: 1rem;
-}
+  <script>
+    const supabase = supabase.createClient(
+      'https://pzabjxoagrofosujjkre.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6YWJqeG9hZ3JvZm9zdWpqa3JlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU5NjcxMDYsImV4cCI6MjA2MTU0MzEwNn0.6815i2mnv7a9zvxdEJdXFe2os5qCp2EEfQ7Kh1g6lnk'
+    );
 
-button {
-background-color: #ff66c4;
-color: #fff;
-padding: 12px;
-width: 100%;
-font-weight: bold;
-border: none;
-border-radius: 8px;
-font-size: 1rem;
-cursor: pointer;
-box-shadow: 0 0 10px #ff66c4;
-}
+    const form = document.getElementById('register-form');
+    const message = document.getElementById('message');
 
-button:hover {
-background-color: #ff33aa;
-}
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const nombres = document.getElementById('nombres').value;
+      const username = document.getElementById('username').value;
+      const fecha = document.getElementById('fecha').value;
+      const genero = document.getElementById('genero').value;
 
-.message {
-margin-top: 10px;
-color: #aaffaa;
-}
+      const { data, error: signupError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: 'https://uuuierk.vercel.app/Activate.html'
+        }
+      });
 
-  </style>  
-</head>  
-<body>  <h1>Kizuna no Unmei</h1>  
-  <form id="register-form">  
-    <input type="text" id="nombres" placeholder="Nombre completo" required />  
-    <input type="text" id="username" placeholder="Nombre de usuario" required />  
-    <input type="email" id="email" placeholder="Correo electrónico" required />  
-    <input type="password" id="password" placeholder="Contraseña" required />  
-    <label for="fecha">Fecha de nacimiento</label>  
-    <input type="date" id="fecha" required />  
-    <label for="genero">Género</label>  
-    <select id="genero">  
-      <option value="">Selecciona tu género</option>  
-      <option value="Masculino">Masculino</option>  
-      <option value="Femenino">Femenino</option>  
-      <option value="Otro">Otro</option>  
-    </select>  
-    <button type="submit">Registrarse</button>  
-    <div class="message" id="message"></div>  
-  </form>  <script>  
-    const supabase = supabase.createClient(  
-      'https://pzabjxoagrofosujjkre.supabase.co',  
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6YWJqeG9hZ3JvZm9zdWpqa3JlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU5NjcxMDYsImV4cCI6MjA2MTU0MzEwNn0.6815i2mnv7a9zvxdEJdXFe2os5qCp2EEfQ7Kh1g6lnk'  
-    );  const form = document.getElementById('register-form');  
-const message = document.getElementById('message');  
+      if (signupError) {
+        message.textContent = `Error: ${signupError.message}`;
+        message.style.color = '#ff8080';
+        return;
+      }
 
-form.addEventListener('submit', async (e) => {  
-  e.preventDefault();  
-  const email = document.getElementById('email').value;  
-  const password = document.getElementById('password').value;  
-  const nombres = document.getElementById('nombres').value;  
-  const username = document.getElementById('username').value;  
-  const fecha = document.getElementById('fecha').value;  
-  const genero = document.getElementById('genero').value;  
+      const userId = data.user?.id;
 
-  const { data, error: signupError } = await supabase.auth.signUp({ email, password });  
+      const { error: insertError } = await supabase.from('Jugadores').insert([{
+        ID: userId,
+        Nombres: nombres,
+        username,
+        Fecha_nacimiento: fecha,
+        Genero: genero,
+        Contrasena: password,
+        Fecha_actualizacion: new Date().toISOString()
+      }]);
 
-  if (signupError) {  
-    message.textContent = `Error: ${signupError.message}`;  
-    message.style.color = '#ff8080';  
-    return;  
-  }  
-
-  const userId = data.user?.id;  
-
-  const { error: insertError } = await supabase.from('Jugadores').insert([  
-    {  
-      ID: userId,  
-      Nombres: nombres,  
-      username,  
-      Fecha_nacimiento: fecha,  
-      Genero: genero,  
-      Contrasena: password,  
-      Fecha_actualizacion: new Date().toISOString()  
-    }  
-  ]);  
-
-  if (insertError) {  
-    message.textContent = `Error al guardar los datos: ${insertError.message}`;  
-    message.style.color = '#ff8080';  
-  } else {  
-    message.textContent = 'Registro exitoso. Revisa tu correo para confirmar.';  
-    form.reset();  
-  }  
-});
-    
+      if (insertError) {
+        message.textContent = `Error al guardar los datos: ${insertError.message}`;
+        message.style.color = '#ff8080';
+      } else {
+        message.textContent = 'Registro exitoso. Revisa tu correo para confirmar.';
+        form.reset();
+      }
+    });
+  </script>
+</body>
+</html>
