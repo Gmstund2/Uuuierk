@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Kizuna no Unmei - Registro</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Registro - Kizuna no Unmei</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
     body {
@@ -60,23 +60,20 @@
       margin-top: 10px;
       color: #aaffaa;
     }
-    .error {
-      color: #ff8080;
-    }
   </style>
 </head>
 <body>
-  <h1>Kizuna no Unmei</h1>
+  <h1>Registro</h1>
   <form id="register-form">
     <input type="email" id="email" placeholder="Correo electrónico" required />
-    <button type="submit">Registrarse</button>
+    <button type="submit">Enviar Magic Link</button>
     <div class="message" id="message"></div>
   </form>
 
   <script>
     const supabase = supabase.createClient(
-      'https://pzabjxoagrofosujjkre.supabase.co',  // Asegúrate de que esta URL sea correcta
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6YWJqeG9hZ3JvZm9zdWpqa3JlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU5NjcxMDYsImV4cCI6MjA2MTU0MzEwNn0.6815i2mnv7a9zvxdEJdXFe2os5qCp2EEfQ7Kh1g6lnk'  // Verifica también que esta clave sea correcta
+      'https://pzabjxoagrofosujjkre.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6YWJqeG9hZ3JvZm9zdWpqa3JlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU5NjcxMDYsImV4cCI6MjA2MTU0MzEwNn0.6815i2mnv7a9zvxdEJdXFe2os5qCp2EEfQ7Kh1g6lnk'
     );
 
     const form = document.getElementById('register-form');
@@ -86,25 +83,20 @@
       e.preventDefault();
       const email = document.getElementById('email').value;
 
-      try {
-        const { data, error: signupError } = await supabase.auth.signUp({
-          email,
-          options: {
-            emailRedirectTo: 'https://uuuierk.vercel.app/Activate.html'  // Aquí se redirige después de la activación
-          }
-        });
-
-        if (signupError) {
-          throw new Error(signupError.message);  // Lanzamos un error si ocurre algún problema
+      const { data, error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: 'https://uuuierk.vercel.app/Activate.html'
         }
+      });
 
-        message.textContent = '¡Revisa tu correo para activar tu cuenta!';
-        message.classList.remove('error');  // Removemos el estilo de error
-        message.classList.add('message');  // Agregamos estilo de mensaje
-
-      } catch (error) {
-        message.textContent = `Error: ${error.message}`;  // Mostramos el mensaje de error
-        message.classList.add('error');  // Aplicamos el estilo de error
+      if (error) {
+        message.textContent = 'Error: ' + error.message;
+        message.style.color = '#ff8080';
+      } else {
+        message.textContent = 'Revisa tu correo y haz clic en el enlace para activar tu cuenta.';
+        message.style.color = '#aaffaa';
+        form.reset();
       }
     });
   </script>
