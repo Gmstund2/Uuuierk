@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Cuenta Confirmada</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
     body {
       background: linear-gradient(135deg, #1f1c2c, #928dab);
@@ -41,8 +42,44 @@
   </style>
 </head>
 <body>
-  <h1>¡Cuenta confirmada!</h1>
-  <p>Gracias por registrarte en <strong>Kizuna no Unmei</strong>.</p>
-  <a href="index.html">Ir al inicio</a>
+  <h1 id="title">Verificando cuenta...</h1>
+  <p id="desc">Por favor, espera un momento.</p>
+  <a href="index.html" id="link" style="display: none;">Ir al inicio</a>
+
+  <script>
+    const supabase = supabase.createClient(
+      'https://pzabjxoagrofosujjkre.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6YWJqeG9hZ3JvZm9zdWpqa3JlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU5NjcxMDYsImV4cCI6MjA2MTU0MzEwNn0.6815i2mnv7a9zvxdEJdXFe2os5qCp2EEfQ7Kh1g6lnk'
+    );
+
+    async function verificarCuenta() {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      
+      if (error || !user) {
+        document.getElementById('title').textContent = 'Error al verificar';
+        document.getElementById('desc').textContent = 'No se pudo confirmar tu sesión. Intenta iniciar sesión nuevamente.';
+        return;
+      }
+
+      // Insertar en Jugadores solo si no existe
+      const { data: existentes } = await supabase
+        .from('Jugadores')
+        .select('user_id')
+        .eq('user_id', user.id);
+
+      if (!existentes || existentes.length === 0) {
+        await supabase.from('Jugadores').insert([{
+          user_id: user.id,
+          Fecha_actualizacion: new Date().toISOString()
+        }]);
+      }
+
+      document.getElementById('title').textContent = '¡Cuenta confirmada!';
+      document.getElementById('desc').textContent = `Bienvenido, ${user.email}`;
+      document.getElementById('link').style.display = 'inline-block';
+    }
+
+    verificarCuenta();
+  </script>
 </body>
-  </html>
+</html>
