@@ -68,19 +68,7 @@
 <body>
   <h1>Kizuna no Unmei</h1>
   <form id="register-form">
-    <input type="text" id="nombres" placeholder="Nombre completo" required />
-    <input type="text" id="username" placeholder="Nombre de usuario" required />
     <input type="email" id="email" placeholder="Correo electrónico" required />
-    <input type="password" id="password" placeholder="Contraseña" required />
-    <label for="fecha">Fecha de nacimiento</label>
-    <input type="date" id="fecha" required />
-    <label for="genero">Género</label>
-    <select id="genero">
-      <option value="">Selecciona tu género</option>
-      <option value="Masculino">Masculino</option>
-      <option value="Femenino">Femenino</option>
-      <option value="Otro">Otro</option>
-    </select>
     <button type="submit">Registrarse</button>
     <div class="message" id="message"></div>
   </form>
@@ -97,50 +85,22 @@
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const nombres = document.getElementById('nombres').value;
-      const username = document.getElementById('username').value;
-      const fecha = document.getElementById('fecha').value;
-      const genero = document.getElementById('genero').value;
 
       const { data, error: signupError } = await supabase.auth.signUp({
         email,
-        password,
         options: {
-          emailRedirectTo: 'https://uuuierk.vercel.app/Activate.html'
+          emailRedirectTo: 'https://uuuierk.vercel.app/Activate.html'  // Reemplaza con tu URL de activación
         }
       });
 
+      // Si hay un error en el registro, lo mostramos aquí
       if (signupError) {
         message.textContent = `Error en el registro: ${signupError.message}`;
         message.classList.add('error');
-        return;
-      }
-
-      const userId = data.user?.id;
-
-      if (!userId) {
-        message.textContent = 'Error: ID de usuario no disponible.';
-        message.classList.add('error');
-        return;
-      }
-
-      const { error: insertError } = await supabase.from('Jugadores').insert([{
-        ID: userId,
-        Nombres: nombres,
-        username,
-        Fecha_nacimiento: fecha,
-        Genero: genero,
-        Fecha_actualizacion: new Date().toISOString()
-      }]);
-
-      if (insertError) {
-        message.textContent = `Error al guardar los datos: ${insertError.message}`;
-        message.classList.add('error');
       } else {
-        message.textContent = 'Registro exitoso. Revisa tu correo para confirmar.';
+        // Si no hubo error, mostramos un mensaje de éxito
+        message.textContent = '¡Revisa tu correo para activar tu cuenta!';
         message.classList.remove('error');
-        form.reset();
       }
     });
   </script>
