@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 import fetch from 'node-fetch';
 import nlp from 'compromise';
@@ -11,10 +10,10 @@ export default async function handler(req, res) {
   if (!topic) return res.status(400).json({ error: 'Falta el tema' });
 
   const url = `https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topic)}`;
-  
+
   try {
     const response = await fetch(url);
-    
+
     if (!response.ok) {
       return res.status(500).json({ error: `Error al obtener datos desde Wikipedia: ${response.statusText}` });
     }
@@ -38,8 +37,9 @@ export default async function handler(req, res) {
     }
 
     res.status(200).json({ mensaje: `Aprendí sobre ${topic}`, palabras: terms.length });
+
   } catch (error) {
     console.error('Error en el proceso:', error);
     res.status(500).json({ error: `Error en el proceso: ${error.message}` });
   }
-}
+                          }
