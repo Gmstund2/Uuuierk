@@ -8,20 +8,25 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Falta el prompt' });
   }
 
-  const response = await fetch("https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${process.env.HF_TOKEN}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ inputs: prompt })
-  });
+  try {
+    const response = await fetch('https://api-inference.huggingface.co/models/tiiuae/falcon-1b-instruct', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.HF_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ inputs: prompt }),
+    });
 
-  const data = await response.json();
+    const data = await response.json();
 
-  if (data.error) {
-    return res.status(500).json({ error: data.error });
+    if (data.error) {
+      return res.status(500).json({ error: data.error });
+    }
+
+    const resultado = data[0]?.generated_text || 'No se generó texto.';
+    res.status(200).json({ result: resultado });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al conectar con Hugging Face' });
   }
-
-  res.status(200).json({ result: data[0].generated_text });
 }
