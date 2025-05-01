@@ -42,13 +42,15 @@
   <script>
     const ciudades = ["Tokio", "Osaka", "Kioto", "Sapporo", "Hiroshima", "Yokohama", "Fukuoka", "Sendai"];
     const nombres = ["Akira", "Hikari", "Rin", "Haruto", "Yui", "Kaito", "Sakura", "Ren", "Takeshi", "Mei"];
-    const apariencias = [
-      "con ojos azules como el mar y cabello plateado que brillaba bajo la luna",
-      "de mirada intensa, cabello negro azabache y piel tan pálida como la nieve",
-      "con pupilas doradas y una cicatriz misteriosa bajo su ojo izquierdo",
-      "de cabello rosa desordenado y mirada soñadora",
-      "con ojos color violeta profundo y una voz que calmaba tormentas",
-      "de complexión delgada, con orejas puntiagudas y ojos turquesa"
+    const ojos = ["azules como el mar", "rojos intensos", "dorados que brillan en la oscuridad", "verdes esmeralda", "violeta místico", "negros como el abismo"];
+    const cabello = ["plateado", "negro azabache", "rosado pálido", "blanco puro", "rubio brillante", "azul eléctrico"];
+    const marcas = [
+      "una cicatriz en forma de cruz sobre el pecho",
+      "un sello mágico en la frente que arde al usar su poder",
+      "un cuerno oculto bajo el cabello",
+      "alas negras que emergen en la noche",
+      "una marca en el brazo que brilla bajo la luna llena",
+      "ojos que cambian de color cuando siente peligro"
     ];
     const poderes = [
       "controlar el tiempo a voluntad",
@@ -78,20 +80,20 @@
     function generarHistoria() {
       const ciudad = ciudades[Math.floor(Math.random() * ciudades.length)];
       const nombre = nombres[Math.floor(Math.random() * nombres.length)];
-      const apariencia = apariencias[Math.floor(Math.random() * apariencias.length)];
+      const colorOjos = ojos[Math.floor(Math.random() * ojos.length)];
+      const colorCabello = cabello[Math.floor(Math.random() * cabello.length)];
+      const marca = marcas[Math.floor(Math.random() * marcas.length)];
       const poder = poderes[Math.floor(Math.random() * poderes.length)];
       const enemigo = enemigos[Math.floor(Math.random() * enemigos.length)];
       const giro = giros[Math.floor(Math.random() * giros.length)];
       const nivel = Math.floor(Math.random() * 10000) + 1;
 
       const historia = `
-        En la bulliciosa ciudad de ${ciudad}, nació un niño llamado ${nombre}, ${apariencia}. 
-        Desde temprana edad, mostraba una energía distinta, como si el universo lo vigilara de cerca. 
-        Sin que nadie lo supiera, había nacido con la habilidad de ${poder}. Su nivel de poder al nacer fue de ${nivel} sobre 10,000, un número que incluso los sabios temían mencionar en voz alta.
+        En la ciudad de ${ciudad}, nació un niño llamado ${nombre}, con ojos ${colorOjos} y cabello ${colorCabello}. 
+        Desde su nacimiento, portaba ${marca}, lo cual hizo que muchos lo temieran y otros lo idolatraran. 
+        Lo que nadie sabía es que había nacido con la habilidad de ${poder}. Su nivel de poder al nacer fue de ${nivel} sobre 10,000, una cifra que desafía toda lógica humana.
 
-        Pero todo cambió cuando ${enemigo} apareció, forzando a ${nombre} a abandonar su vida normal y enfrentarse a un destino que jamás pidió. A lo largo de su camino, ${giro}, y con ello, el verdadero viaje apenas comienza.
-
-        Así da inicio una historia de batallas, sacrificios y esperanza, donde el corazón de un joven podría ser la clave para salvar –o destruir– todo lo que conoce.
+        Su tranquila vida cambió drásticamente cuando ${enemigo} apareció, obligando a ${nombre} a aceptar su destino. Durante su viaje, ${giro}.
       `;
 
       document.getElementById("historia").innerHTML = historia;
