@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/learnFromWikipedia.js": {
+      "cron": "*/3 * * * *"
+    }
+  }
+}
