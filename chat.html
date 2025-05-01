@@ -1,144 +1,133 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Batalla de Destinos</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Generador de Batallas Anime</title>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #111;
-      color: #f2f2f2;
-      padding: 20px;
+      font-family: "Segoe UI", sans-serif;
+      background-color: #0f0f1e;
+      color: #f5f5f5;
+      padding: 40px;
     }
-    .historia {
-      margin-bottom: 30px;
-      padding: 15px;
-      border-left: 4px solid crimson;
-      background-color: #222;
-    }
-    .batalla {
-      background-color: #1a1a1a;
-      padding: 20px;
-      border-top: 3px solid gold;
-    }
-    h1, h2, h3 {
-      color: #ff4d4d;
+    h1 {
+      color: #ff4ec2;
     }
     button {
-      padding: 10px 20px;
-      background: crimson;
-      border: none;
+      padding: 12px 20px;
+      background-color: #ff4ec2;
       color: white;
+      border: none;
+      border-radius: 5px;
       cursor: pointer;
-      font-weight: bold;
-      margin-bottom: 20px;
+      font-size: 16px;
+      margin-top: 20px;
     }
     button:hover {
-      background: darkred;
+      background-color: #e142b1;
+    }
+    .historia {
+      margin-top: 30px;
+      font-size: 18px;
+      line-height: 1.6;
     }
   </style>
 </head>
 <body>
-  <h1>Crónicas del Eclipse</h1>
-  <button onclick="iniciar()">Generar Personajes y Simular Batalla</button>
-  <div id="contenedor"></div>
+  <h1>Generador de Batallas Anime</h1>
+  <button onclick="generarHistorias()">Generar Historias</button>
+  <div id="resultado" class="historia"></div>
 
   <script>
-    const nombres = ["Kael", "Ayame", "Lucian", "Rei", "Zarek", "Elena", "Noah", "Mira", "Dante", "Yuki"];
-    const ciudades = ["Noxhar", "Valtheria", "Zenthia", "Arkadia", "Elumir", "Thalys"];
-    const ojos = ["ámbar", "gris espectral", "azul neón", "rojo sangre", "violeta profundo"];
-    const cabello = ["blanco nieve", "negro azabache", "azul oscuro", "rojo intenso", "plateado"];
-    const marcas = ["una cicatriz en forma de cruz", "un sello demoníaco en la nuca", "un ojo oculto en la mano", "un tatuaje que brilla al anochecer", "una runa antigua en el pecho"];
-    const enemigos = ["el Consejo de los Vacíos", "su reflejo del futuro", "una criatura que habita sus sueños", "el heredero del caos", "una versión alterna de sí mismo"];
-    const giros = ["Pero el destino le deparaba una traición cercana.", "Descubrió que su enemigo buscaba protegerlo.", "El poder dentro de él comenzó a consumir su humanidad.", "Una voz en su mente comenzó a guiarlo... o tal vez a manipularlo."];
+    const nombres = ["Akira", "Yuki", "Ren", "Hana", "Kaito", "Sora", "Miyu", "Takeshi"];
+    const ciudades = ["Tokio", "Seúl", "Kioto", "Osaka", "Nagoya"];
+    const ojos = ["azules como el mar", "rojos como el fuego", "dorados como el sol", "verdes como esmeraldas", "grises como la niebla"];
+    const cabellos = ["negro azabache", "blanco como la nieve", "rosado eléctrico", "plateado brillante", "café oscuro"];
+    const marcas = ["una cicatriz en forma de luna", "un sello ancestral en el pecho", "un tatuaje que brilla con ira", "una marca demoníaca en el ojo", "una cruz invertida en la espalda"];
 
     const poderes = [
-      "detener el tiempo por breves segundos",
-      "extraer recuerdos con solo mirar a los ojos",
-      "invocar ilusiones tan reales que duelen",
-      "absorber energía vital con el tacto",
-      "crear silencio absoluto a su alrededor",
-      "dividir su alma en múltiples cuerpos",
-      "manipular sombras para atacar o defender",
-      "revivir un momento exacto una sola vez",
-      "encerrar a otros en bucles mentales",
-      "destruir materia con una palabra",
-      "crear espejos que desvían habilidades",
-      "desvanecerse al ser herido",
-      "gritar y romper la voluntad del enemigo"
+      "controlar el tiempo", "crear ilusiones", "super fuerza", "manipulación mental", "invisibilidad",
+      "regeneración instantánea", "invocación de demonios", "teletransportación", "control de la gravedad", "crear barreras absolutas"
     ];
 
-    function generarHabilidades() {
-      const habilidades = [];
-      const cantidad = Math.floor(Math.random() * 3) + 2;
-      while (habilidades.length < cantidad) {
-        const habilidad = poderes[Math.floor(Math.random() * poderes.length)];
-        if (!habilidades.includes(habilidad)) habilidades.push(habilidad);
-      }
-      return habilidades;
+    const ventajas = {
+      "controlar el tiempo": ["super fuerza", "invocación de demonios", "invisibilidad"],
+      "crear ilusiones": ["super fuerza", "manipulación mental"],
+      "manipulación mental": ["invisibilidad", "invocación de demonios"],
+      "control de la gravedad": ["super fuerza", "teletransportación"],
+      "crear barreras absolutas": ["control de la gravedad", "invocación de demonios", "super fuerza"],
+      "teletransportación": ["manipulación mental", "regeneración instantánea"],
+      "invisibilidad": ["invocación de demonios"],
+      "invocación de demonios": [],
+      "regeneración instantánea": [],
+      "super fuerza": []
+    };
+
+    function obtenerAleatorio(lista) {
+      return lista[Math.floor(Math.random() * lista.length)];
     }
 
     function generarPersonaje() {
-      const ciudad = ciudades[Math.floor(Math.random() * ciudades.length)];
-      const nombre = nombres[Math.floor(Math.random() * nombres.length)];
-      const colorOjos = ojos[Math.floor(Math.random() * ojos.length)];
-      const colorCabello = cabello[Math.floor(Math.random() * cabello.length)];
-      const marca = marcas[Math.floor(Math.random() * marcas.length)];
-      const habilidades = generarHabilidades();
-      const enemigo = enemigos[Math.floor(Math.random() * enemigos.length)];
-      const giro = giros[Math.floor(Math.random() * giros.length)];
+      const nombre = obtenerAleatorio(nombres);
+      const ciudad = obtenerAleatorio(ciudades);
+      const colorOjos = obtenerAleatorio(ojos);
+      const colorCabello = obtenerAleatorio(cabellos);
+      const marca = obtenerAleatorio(marcas);
       const nivel = Math.floor(Math.random() * 10000) + 1;
-      const estrategia = Math.floor(Math.random() * 100) + 1;
+      const habilidades = [];
+      while (habilidades.length < 2) {
+        const poder = obtenerAleatorio(poderes);
+        if (!habilidades.includes(poder)) habilidades.push(poder);
+      }
 
-      return {
-        historia: `
-          <div class="historia">
-          <h2>${nombre} de ${ciudad}</h2>
-          <p>Ojos: ${colorOjos}. Cabello: ${colorCabello}. Marca: ${marca}.</p>
-          <p>Desde pequeño desarrolló habilidades únicas como: <strong>${habilidades.join(", ")}</strong>.</p>
-          <p>Su existencia se tornó una lucha constante cuando se cruzó con ${enemigo}. ${giro}</p>
-          <p><strong>Nivel de poder:</strong> ${nivel}/10,000<br><strong>Estrategia:</strong> ${estrategia}/100</p>
-          </div>
-        `,
-        nombre,
-        habilidades,
-        nivel,
-        estrategia
-      };
+      return { nombre, ciudad, colorOjos, colorCabello, marca, nivel, habilidades };
     }
 
-    function simularBatalla(p1, p2) {
-      let resultado = `<div class="batalla"><h2>El Encuentro Final</h2>`;
-      resultado += `<p>${p1.nombre} y ${p2.nombre} se enfrentaron en un duelo que estremeció los cimientos de la realidad.</p>`;
-      resultado += `<p><strong>${p1.nombre}</strong> usó: ${p1.habilidades.join(", ")}.<br>`;
-      resultado += `<strong>${p2.nombre}</strong> contraatacó con: ${p2.habilidades.join(", ")}.</p>`;
+    function describirPersonaje(p) {
+      return `
+        En la ciudad de ${p.ciudad} nació ${p.nombre}, con ojos ${p.colorOjos} y cabello ${p.colorCabello}. Portaba ${p.marca}, lo que lo marcó desde su nacimiento.
+        Aunque su nivel de poder era de ${p.nivel}, poseía habilidades únicas como ${p.habilidades.join(" y ")}.
+      `;
+    }
 
-      let ventaja1 = p1.nivel + p1.habilidades.length * 800 + p1.estrategia * 15;
-      let ventaja2 = p2.nivel + p2.habilidades.length * 800 + p2.estrategia * 15;
+    function determinarGanador(p1, p2) {
+      let ventaja1 = 0;
+      let ventaja2 = 0;
 
-      if (ventaja1 > ventaja2 + 1000) {
-        resultado += `<p>${p1.nombre} combinó su astucia con una fuerza abrumadora, inclinando la batalla a su favor.</p><h3>Ganador: ${p1.nombre}</h3>`;
-      } else if (ventaja2 > ventaja1 + 1000) {
-        resultado += `<p>${p2.nombre} aprovechó cada debilidad del rival con precisión letal.</p><h3>Ganador: ${p2.nombre}</h3>`;
-      } else {
-        resultado += `<p>Ambos combatientes se neutralizaron en una batalla mental y física agotadora.</p>`;
-        if (ventaja1 > ventaja2) {
-          resultado += `<h3>Ganador por astucia: ${p1.nombre}</h3>`;
-        } else if (ventaja2 > ventaja1) {
-          resultado += `<h3>Ganador por adaptación: ${p2.nombre}</h3>`;
-        } else {
-          resultado += `<h3>Empate absoluto. El campo quedó en silencio.</h3>`;
+      for (let poder1 of p1.habilidades) {
+        for (let poder2 of p2.habilidades) {
+          if (ventajas[poder1]?.includes(poder2)) ventaja1++;
+          if (ventajas[poder2]?.includes(poder1)) ventaja2++;
         }
       }
 
-      return resultado + "</div>";
+      if (ventaja1 > ventaja2) return p1;
+      if (ventaja2 > ventaja1) return p2;
+      return p1.nivel >= p2.nivel ? p1 : p2;
     }
 
-    function iniciar() {
+    function generarHistorias() {
       const p1 = generarPersonaje();
       const p2 = generarPersonaje();
-      const resultado = simularBatalla(p1, p2);
-      document.getElementById("contenedor").innerHTML = p1.historia + p2.historia + resultado;
+
+      const descripcion1 = describirPersonaje(p1);
+      const descripcion2 = describirPersonaje(p2);
+
+      const ganador = determinarGanador(p1, p2);
+      const perdedor = ganador === p1 ? p2 : p1;
+
+      const resultado = `
+        ${descripcion1}
+        <br><br>
+        ${descripcion2}
+        <br><br>
+        Ambos se encontraron en un conflicto inevitable. Sus habilidades chocaron en una batalla intensa y caótica.
+        <br>
+        Aunque ${perdedor.nombre} mostró valentía y determinación, ${ganador.nombre} demostró una ventaja táctica con sus habilidades y salió victorioso.
+      `;
+
+      document.getElementById("resultado").innerHTML = resultado;
     }
   </script>
 </body>
