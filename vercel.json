@@ -1,8 +1,8 @@
 {
   "crons": [
     {
-      "path": "/api/learnFromWikipedia",
-      "schedule": "*/3 * * * *"
+      "path": "/api/cron",  // La ruta de tu archivo cron.js
+      "schedule": "*/3 * * * *"  // Cron job que se ejecutará cada 3 minutos
     }
   ]
 }
