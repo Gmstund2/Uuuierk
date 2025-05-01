@@ -1,85 +1,102 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cuenta Confirmada</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kizuna no Unmei - Bienvenido</title>
   <style>
     body {
-      background: linear-gradient(135deg, #1f1c2c, #928dab);
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       color: #fff;
       display: flex;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
-      height: 100vh;
+      justify-content: center;
+      min-height: 100vh;
       margin: 0;
-      text-align: center;
     }
     h1 {
       font-size: 2.5rem;
-      color: #a0ffe6;
+      margin-bottom: 10px;
+      color: #ff66c4;
+      text-shadow: 0 0 5px #ff66c4;
     }
-    p {
-      font-size: 1.2rem;
-      margin-top: 10px;
+    .login-box {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid #ff66c4;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 0 15px rgba(255, 102, 196, 0.4);
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
     }
-    a {
-      margin-top: 20px;
-      display: inline-block;
-      padding: 12px 20px;
+    button {
       background-color: #ff66c4;
-      color: white;
-      text-decoration: none;
+      color: #fff;
+      padding: 12px;
+      width: 100%;
+      font-weight: bold;
+      border: none;
       border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
       box-shadow: 0 0 10px #ff66c4;
     }
-    a:hover {
+    button:hover {
       background-color: #ff33aa;
     }
   </style>
 </head>
 <body>
-  <h1 id="title">Verificando cuenta...</h1>
-  <p id="desc">Por favor, espera un momento.</p>
-  <a href="index.html" id="link" style="display: none;">Ir al inicio</a>
+  <h1>Bienvenido a Kizuna no Unmei</h1>
+  <div class="login-box">
+    <button onclick="registerUser()">Registrar usuario</button>
+  </div>
 
-  <script>
-    const supabase = supabase.createClient(
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js'
+
+    const supabase = createClient(
       'https://pzabjxoagrofosujjkre.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6YWJqeG9hZ3JvZm9zdWpqa3JlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU5NjcxMDYsImV4cCI6MjA2MTU0MzEwNn0.6815i2mnv7a9zvxdEJdXFe2os5qCp2EEfQ7Kh1g6lnk'
     );
 
-    async function verificarCuenta() {
-      const { data: { user }, error } = await supabase.auth.getUser();
-      
-      if (error || !user) {
-        document.getElementById('title').textContent = 'Error al verificar';
-        document.getElementById('desc').textContent = 'No se pudo confirmar tu sesión. Intenta iniciar sesión nuevamente.';
-        return;
+    async function registerUser() {
+      const user = supabase.auth.user();
+
+      if (user) {
+        // Verificamos si el usuario ya está en la tabla 'Jugadores'
+        const { data, error } = await supabase
+          .from('Jugadores')
+          .select('*')
+          .eq('user_id', user.id);
+
+        if (data.length === 0) {
+          // Si no existe, insertamos el nuevo jugador
+          const { error: insertError } = await supabase
+            .from('Jugadores')
+            .insert([
+              {
+                user_id: user.id,
+                Nombres: user.user_metadata.full_name || 'No disponible',
+                Nivel_de_poder: 1, // Valor predeterminado para el nuevo jugador
+                Fecha_actualizacion: new Date().toISOString(),
+                // Puedes agregar otros valores predeterminados según sea necesario
+              }
+            ]);
+
+          if (insertError) {
+            console.error('Error al insertar los datos:', insertError.message);
+          } else {
+            console.log('Usuario registrado exitosamente en Jugadores');
+          }
+        } else {
+          console.log('El usuario ya existe en la tabla');
+        }
       }
-
-      // Insertar en Jugadores solo si no existe
-      const { data: existentes } = await supabase
-        .from('Jugadores')
-        .select('user_id')
-        .eq('user_id', user.id);
-
-      if (!existentes || existentes.length === 0) {
-        await supabase.from('Jugadores').insert([{
-          user_id: user.id,
-          Fecha_actualizacion: new Date().toISOString()
-        }]);
-      }
-
-      document.getElementById('title').textContent = '¡Cuenta confirmada!';
-      document.getElementById('desc').textContent = `Bienvenido, ${user.email}`;
-      document.getElementById('link').style.display = 'inline-block';
     }
-
-    verificarCuenta();
   </script>
 </body>
 </html>
