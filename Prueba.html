@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aprender desde Wikipedia</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f9f9f9;
+    }
+
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      margin: 10px 0;
+    }
+
+    #response {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Aprender un tema desde Wikipedia</h1>
+  
+  <label for="topic">Escribe un tema (por ejemplo, 'amor'): </label>
+  <input type="text" id="topic" placeholder="Tema para aprender...">
+  <button onclick="sendTopic()">Aprender</button>
+
+  <div id="response"></div>
+
+  <script>
+    async function sendTopic() {
+      const topic = document.getElementById('topic').value;
+      if (!topic) {
+        alert('Por favor, ingresa un tema');
+        return;
+      }
+
+      const responseElement = document.getElementById('response');
+      responseElement.innerHTML = 'Cargando...';
+
+      try {
+        // Realizamos la solicitud a la API de Vercel
+        const response = await fetch(`/api/learnFromWikipedia?topic=${encodeURIComponent(topic)}`);
+        
+        if (!response.ok) {
+          throw new Error('Error al obtener datos desde Wikipedia');
+        }
+
+        const data = await response.json();
+
+        if (data.error) {
+          responseElement.innerHTML = `Error: ${data.error}`;
+        } else {
+          responseElement.innerHTML = `¡Aprendí sobre ${topic}! Se procesaron ${data.palabras} palabras.`;
+        }
+      } catch (error) {
+        responseElement.innerHTML = `Error: ${error.message}`;
+      }
+    }
+  </script>
+</body>
+</html>
