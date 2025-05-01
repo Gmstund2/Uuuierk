@@ -3,27 +3,25 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Método no permitido' });
   }
 
-  const { prompt } = req.body;
-  const HF_TOKEN = process.env.HF_TOKEN;
-
-  try {
-    const response = await fetch('https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${HF_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ inputs: prompt }),
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      return res.status(200).json({ generated_text: data[0]?.generated_text });
-    } else {
-      return res.status(response.status).json({ error: data.error || 'Error desconocido' });
-    }
-  } catch (error) {
-    return res.status(500).json({ error: 'Error en el servidor: ' + error.message });
+  const prompt = req.body?.prompt;
+  if (!prompt) {
+    return res.status(400).json({ error: 'Falta el prompt' });
   }
+
+  const response = await fetch("https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${process.env.HF_TOKEN}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ inputs: prompt })
+  });
+
+  const data = await response.json();
+
+  if (data.error) {
+    return res.status(500).json({ error: data.error });
+  }
+
+  res.status(200).json({ result: data[0].generated_text });
 }
