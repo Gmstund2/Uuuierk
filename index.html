@@ -39,16 +39,20 @@
 
     // Función para manejar el login
     async function handleLogin() {
+      // Verifica si la sesión ya existe
       const { data: { session }, error } = await supabase.auth.getSession();
 
       if (session?.user) {
-        // Si el usuario está logueado, verifica e inserta en la tabla
-        await checkAndInsertPlayer(session.user);
-        console.log('Jugador autenticado y registrado.');
+        // Si el usuario está logueado y la página no se ha redirigido antes
+        if (!localStorage.getItem('redirected')) {
+          // Marcar que ya fue redirigido
+          localStorage.setItem('redirected', 'true');
 
-        // Redirige a la página principal o donde desees, si aún no se ha hecho
-        if (window.location.pathname !== '/dashboard.html') {
-          window.location.href = '/dashboard.html'; // Aquí puedes redirigir al panel de usuario
+          // Verifica si el jugador existe en la tabla y lo inserta si es necesario
+          await checkAndInsertPlayer(session.user);
+
+          // Redirige a la página dashboard solo si aún no ha sido redirigido
+          window.location.href = '/dashboard.html'; 
         }
       } else {
         console.error('No hay sesión activa:', error?.message);
