@@ -1,3 +1,4 @@
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método no permitido' });
@@ -9,24 +10,24 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch('https://api-inference.huggingface.co/models/EleutherAI/gpt-neo-1.3B', {
-      method: 'POST',
+    const response = await fetch("https://api-inference.huggingface.co/models/EleutherAI/gpt-neo-1.3B", {
+      method: "POST",
       headers: {
-        Authorization: `Bearer ${process.env.HF_TOKEN}`,
-        'Content-Type': 'application/json',
+        "Authorization": `Bearer ${process.env.HF_TOKEN}`,
+        "Content-Type": "application/json"
       },
-      body: JSON.stringify({ inputs: prompt }),
+      body: JSON.stringify({ inputs: prompt })
     });
 
-    const data = await response.json();
-
-    if (data.error) {
-      return res.status(500).json({ error: data.error });
+    if (!response.ok) {
+      return res.status(500).json({ error: `Error en la respuesta: ${response.statusText}` });
     }
 
-    const resultado = data[0]?.generated_text || 'No se generó texto.';
-    res.status(200).json({ result: resultado });
+    const data = await response.json();
+    res.status(200).json({ result: data[0].generated_text });
+
   } catch (error) {
-    res.status(500).json({ error: 'Error al conectar con Hugging Face' });
+    console.error(error);
+    res.status(500).json({ error: 'Error al conectar con el modelo' });
   }
 }
