@@ -4,7 +4,7 @@
   "type": "module",
   "dependencies": {
     "@supabase/supabase-js": "^2.39.5",
-    "node-fetch": "^3.4.0",
+    "node-fetch": "^3.3.2",
     "compromise": "^13.11.3"
   }
 }
