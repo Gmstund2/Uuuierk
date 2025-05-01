@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -67,7 +66,7 @@
       mensaje.textContent = `Hola, ${user.user_metadata.full_name || 'Jugador'}!`;
 
       const { data: existing, error: selectError } = await supabase
-        .from('Players')
+        .from('players') // corregido a minúsculas
         .select('id')
         .eq('user_id', user.id);
 
@@ -79,7 +78,7 @@
 
       if (existing.length === 0) {
         const { error: insertError } = await supabase
-          .from('Players')
+          .from('players') // corregido a minúsculas
           .insert([{
             user_id: user.id,
             nombres: user.user_metadata.full_name || 'No disponible',
