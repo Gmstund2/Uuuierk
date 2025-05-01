@@ -1,7 +1,11 @@
 export default async function handler(req, res) {
-  const prompt = req.body.prompt;
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Método no permitido' });
+  }
 
   try {
+    const prompt = req.body.prompt;
+
     const response = await fetch('https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct', {
       method: 'POST',
       headers: {
@@ -12,8 +16,13 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
-    res.status(200).json(data);
+
+    if (response.ok) {
+      res.status(200).json(data);
+    } else {
+      res.status(500).json({ error: 'Error desde Hugging Face', details: data });
+    }
   } catch (error) {
-    res.status(500).json({ error: 'Error al conectar con Hugging Face', details: error.message });
+    res.status(500).json({ error: 'Error interno del servidor', details: error.message });
   }
-      }
+}
