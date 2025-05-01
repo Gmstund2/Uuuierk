@@ -90,14 +90,14 @@
       "un monstruo feroz con ojos de fuego", "una traición profunda de alguien cercano", "la corrupción de su propia alma", "un hechizo ancestral que bloquea su mente"
     ];
     const finales = [
-      "y encontró una paz inesperada", "pero el precio fue más alto de lo que imaginaba", "y su destino cambió para siempre", "y se dio cuenta de que la verdadera fuerza venía del amor"
+      "y encontró la paz que tanto buscaba", "pero el precio fue mucho más alto de lo que imaginaba", "y su destino cambió para siempre", "y comprendió que la verdadera fuerza radica en el amor"
     ];
 
     const arcos = [
       { inicio: "miedoso", evento: "superó sus peores temores", final: "valiente" },
-      { inicio: "ambicioso", evento: "perdió todo lo que valoraba", final: "humilde" },
-      { inicio: "solitario", evento: "construyó una familia con extraños", final: "aceptado" },
-      { inicio: "inocente", evento: "descubrió la cruel verdad del mundo", final: "desilusionado" },
+      { inicio: "ambicioso", evento: "perdió todo lo que más quería", final: "humilde" },
+      { inicio: "solitario", evento: "se unió a un grupo de desconocidos", final: "aceptado" },
+      { inicio: "inocente", evento: "fue testigo de la crueldad del mundo", final: "desilusionado" },
       { inicio: "desesperado", evento: "se sacrificó por los demás", final: "redimido" }
     ];
 
@@ -113,10 +113,10 @@
       const final = elegirAleatorio(finales);
       const arco = elegirAleatorio(arcos);
 
-      const historia = `${personaje}, quien comenzó su viaje siendo ${arco.inicio}, vivía ${lugar}. ` +
-        `Su objetivo era ${objetivo}, pero a lo largo del camino se encontró con ${obstaculo}, lo que puso a prueba su espíritu. ` +
-        `En el proceso, ${arco.evento} y fue transformado en alguien completamente diferente, alguien más fuerte y sabio. ` +
-        `Finalmente, ${final}`;
+      const historia = `${personaje}, quien al principio era ${arco.inicio}, vivía ${lugar}. ` +
+        `Su meta era ${objetivo}, pero durante su viaje, se enfrentó a ${obstaculo}, lo cual puso a prueba no solo su valor, sino también su alma. ` +
+        `A lo largo de la travesía, ${arco.evento}, lo que le permitió crecer y convertirse en alguien completamente diferente, alguien más sabio y valiente. ` +
+        `Finalmente, ${final}.`;
 
       document.getElementById("resultado").textContent = historia;
     }
