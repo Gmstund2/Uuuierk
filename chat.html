@@ -30,7 +30,7 @@
     p {
       margin-top: 30px;
       font-size: 18px;
-      line-height: 1.6;
+      line-height: 1.7;
     }
   </style>
 </head>
@@ -40,64 +40,58 @@
   <p id="historia"></p>
 
   <script>
-    const personajes = [
-      "un chico de secundaria con un pasado sellado",
-      "una niña huérfana que habla con los espíritus",
-      "un oficinista deprimido que despierta como guerrero celestial",
-      "una idol en ascenso que oculta un poder ancestral",
-      "un joven ninja nacido sin chakra aparente",
-      "una estudiante que renace en un mundo mágico con recuerdos de su vida pasada",
-      "un bebé marcado por una maldición divina",
-      "una princesa exiliada con el don de controlar los elementos"
+    const ciudades = ["Tokio", "Osaka", "Kioto", "Sapporo", "Hiroshima", "Yokohama", "Fukuoka", "Sendai"];
+    const nombres = ["Akira", "Hikari", "Rin", "Haruto", "Yui", "Kaito", "Sakura", "Ren", "Takeshi", "Mei"];
+    const apariencias = [
+      "con ojos azules como el mar y cabello plateado que brillaba bajo la luna",
+      "de mirada intensa, cabello negro azabache y piel tan pálida como la nieve",
+      "con pupilas doradas y una cicatriz misteriosa bajo su ojo izquierdo",
+      "de cabello rosa desordenado y mirada soñadora",
+      "con ojos color violeta profundo y una voz que calmaba tormentas",
+      "de complexión delgada, con orejas puntiagudas y ojos turquesa"
     ];
-
-    const lugares = [
-      "en Tokio en el año 2089",
-      "en una academia mágica flotante sobre el mar",
-      "en un Japón alternativo invadido por entidades del vacío",
-      "en una ciudad donde los sueños se mezclan con la realidad",
-      "en un reino olvidado atrapado entre dimensiones",
-      "en una aldea oculta bajo una cúpula espiritual"
-    ];
-
     const poderes = [
-      "despertó el control absoluto del tiempo",
-      "pudo invocar bestias selladas en su interior",
-      "descubrió que podía entrar en la mente de las personas",
-      "manipulaba la gravedad con su voz",
-      "obtuvo una armadura sagrada al borde de la muerte",
-      "revivía cada vez que moría, conservando todos sus recuerdos"
+      "controlar el tiempo a voluntad",
+      "invocar llamas negras desde su alma",
+      "leer los pensamientos con solo tocar la piel",
+      "manipular sombras como extensiones de su cuerpo",
+      "curar cualquier herida con una sola lágrima",
+      "detener la gravedad a su alrededor"
     ];
-
     const enemigos = [
-      "una organización secreta que quiere borrar su existencia",
-      "un demonio ancestral liberado por accidente",
-      "un amigo de la infancia convertido en rival",
-      "una maldición que consume su alma lentamente",
-      "un consejo de dioses que lo considera una amenaza",
-      "una profecía que lo condena a destruir el mundo que ama"
+      "una organización milenaria que caza a los niños especiales",
+      "un demonio que se oculta entre los humanos",
+      "una criatura interdimensional liberada por accidente",
+      "un antiguo amigo que cayó en la oscuridad",
+      "un espíritu vengativo encerrado desde la era feudal",
+      "la mismísima divinidad que lo creó con miedo a su poder"
     ];
-
     const giros = [
-      "descubrió que todo era un ciclo sin fin",
-      "la persona que amaba era el enemigo todo el tiempo",
-      "murió… pero regresó con una nueva misión",
-      "su poder no venía de él, sino de alguien que lo manipulaba",
-      "renunció a su poder para proteger a los demás",
-      "viajó al pasado para corregir sus errores, pero lo empeoró todo"
+      "el enemigo resulta ser su verdadero padre",
+      "su poder está ligado al fin del mundo",
+      "muere y despierta 5 años en el pasado con recuerdos intactos",
+      "tiene un hermano gemelo al que jamás conoció",
+      "su destino es convertirse en aquello que más teme",
+      "descubre que nunca fue humano"
     ];
 
     function generarHistoria() {
-      const personaje = personajes[Math.floor(Math.random() * personajes.length)];
-      const lugar = lugares[Math.floor(Math.random() * lugares.length)];
+      const ciudad = ciudades[Math.floor(Math.random() * ciudades.length)];
+      const nombre = nombres[Math.floor(Math.random() * nombres.length)];
+      const apariencia = apariencias[Math.floor(Math.random() * apariencias.length)];
       const poder = poderes[Math.floor(Math.random() * poderes.length)];
       const enemigo = enemigos[Math.floor(Math.random() * enemigos.length)];
       const giro = giros[Math.floor(Math.random() * giros.length)];
+      const nivel = Math.floor(Math.random() * 10000) + 1;
 
       const historia = `
-        En una historia que mezcla drama, acción y misticismo, ${personaje} vive ${lugar}. Un día, sin entender cómo, ${poder}.
-        Su nueva realidad lo obliga a enfrentarse a ${enemigo}. A lo largo de su viaje, ${giro}. 
-        Así comienza una batalla no solo por su destino, sino por el alma de un mundo que ya no reconoce.
+        En la bulliciosa ciudad de ${ciudad}, nació un niño llamado ${nombre}, ${apariencia}. 
+        Desde temprana edad, mostraba una energía distinta, como si el universo lo vigilara de cerca. 
+        Sin que nadie lo supiera, había nacido con la habilidad de ${poder}. Su nivel de poder al nacer fue de ${nivel} sobre 10,000, un número que incluso los sabios temían mencionar en voz alta.
+
+        Pero todo cambió cuando ${enemigo} apareció, forzando a ${nombre} a abandonar su vida normal y enfrentarse a un destino que jamás pidió. A lo largo de su camino, ${giro}, y con ello, el verdadero viaje apenas comienza.
+
+        Así da inicio una historia de batallas, sacrificios y esperanza, donde el corazón de un joven podría ser la clave para salvar –o destruir– todo lo que conoce.
       `;
 
       document.getElementById("historia").innerHTML = historia;
