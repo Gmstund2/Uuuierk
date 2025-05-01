@@ -46,12 +46,14 @@
         await checkAndInsertPlayer(session.user);
         console.log('Jugador autenticado y registrado.');
 
-        // Redirige a la página principal o donde desees
-        window.location.href = 'dashboard.html'; // Aquí puedes redirigir al panel de usuario
+        // Redirige a la página principal o donde desees, si aún no se ha hecho
+        if (window.location.pathname !== '/dashboard.html') {
+          window.location.href = '/dashboard.html'; // Aquí puedes redirigir al panel de usuario
+        }
       } else {
         console.error('No hay sesión activa:', error?.message);
         // Si no hay sesión, redirige al login
-        window.location.href = 'index.html'; // Página de inicio de sesión
+        window.location.href = '/index.html'; // Página de inicio de sesión
       }
     }
 
