@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Registro - Kizuna no Unmei</title>
+  <title>Kizuna no Unmei - Iniciar Sesión</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
     body {
@@ -23,7 +23,7 @@
       color: #ff66c4;
       text-shadow: 0 0 5px #ff66c4;
     }
-    form {
+    .login-box {
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid #ff66c4;
       border-radius: 12px;
@@ -31,15 +31,7 @@
       box-shadow: 0 0 15px rgba(255, 102, 196, 0.4);
       width: 90%;
       max-width: 400px;
-    }
-    input {
-      display: block;
-      width: 100%;
-      padding: 10px;
-      margin: 15px 0;
-      border-radius: 8px;
-      border: none;
-      font-size: 1rem;
+      text-align: center;
     }
     button {
       background-color: #ff66c4;
@@ -56,19 +48,13 @@
     button:hover {
       background-color: #ff33aa;
     }
-    .message {
-      margin-top: 10px;
-      color: #aaffaa;
-    }
   </style>
 </head>
 <body>
-  <h1>Registro</h1>
-  <form id="register-form">
-    <input type="email" id="email" placeholder="Correo electrónico" required />
-    <button type="submit">Enviar Magic Link</button>
-    <div class="message" id="message"></div>
-  </form>
+  <h1>Kizuna no Unmei</h1>
+  <div class="login-box">
+    <button onclick="loginWithTwitter()">Iniciar sesión con Twitter</button>
+  </div>
 
   <script>
     const supabase = supabase.createClient(
@@ -76,29 +62,15 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6YWJqeG9hZ3JvZm9zdWpqa3JlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU5NjcxMDYsImV4cCI6MjA2MTU0MzEwNn0.6815i2mnv7a9zvxdEJdXFe2os5qCp2EEfQ7Kh1g6lnk'
     );
 
-    const form = document.getElementById('register-form');
-    const message = document.getElementById('message');
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('email').value;
-
-      const { data, error } = await supabase.auth.signInWithOtp({
-        email,
+    async function loginWithTwitter() {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'twitter',
         options: {
-          emailRedirectTo: 'https://uuuierk.vercel.app/Activate.html'
+          redirectTo: window.location.origin + '/bienvenido.html'
         }
       });
-
-      if (error) {
-        message.textContent = 'Error: ' + error.message;
-        message.style.color = '#ff8080';
-      } else {
-        message.textContent = 'Revisa tu correo y haz clic en el enlace para activar tu cuenta.';
-        message.style.color = '#aaffaa';
-        form.reset();
-      }
-    });
+      if (error) console.error('Error al iniciar sesión:', error.message);
+    }
   </script>
 </body>
 </html>
