@@ -1,77 +1,66 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kizuna no Unmei - Iniciar Sesión</title>
-  <style>
-    body {
-      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      margin: 0;
-    }
-    h1 {
-      font-size: 2.5rem;
-      margin-bottom: 10px;
-      color: #ff66c4;
-      text-shadow: 0 0 5px #ff66c4;
-    }
-    .login-box {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid #ff66c4;
-      border-radius: 12px;
-      padding: 30px;
-      box-shadow: 0 0 15px rgba(255, 102, 196, 0.4);
-      width: 90%;
-      max-width: 400px;
-      text-align: center;
-    }
-    button {
-      background-color: #ff66c4;
-      color: #fff;
-      padding: 12px;
-      width: 100%;
-      font-weight: bold;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      cursor: pointer;
-      box-shadow: 0 0 10px #ff66c4;
-    }
-    button:hover {
-      background-color: #ff33aa;
-    }
-  </style>
-</head>
-<body>
-  <h1>Kizuna no Unmei</h1>
-  <div class="login-box">
-    <button onclick="loginWithTwitter()">Iniciar sesión con Twitter</button>
-  </div>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bienvenido</title>
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js'
 
+    // Inicializa el cliente de Supabase
     const supabase = createClient(
-      'https://pzabjxoagrofosujjkre.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6YWJqeG9hZ3JvZm9zdWpqa3JlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU5NjcxMDYsImV4cCI6MjA2MTU0MzEwNn0.6815i2mnv7a9zvxdEJdXFe2os5qCp2EEfQ7Kh1g6lnk'
+      'https://pzabjxoagrofosujjkre.supabase.co', // URL de tu proyecto Supabase
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6YWJqeG9hZ3JvZm9zdWpqa3JlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU5NjcxMDYsImV4cCI6MjA2MTU0MzEwNn0.6815i2mnv7a9zvxdEJdXFe2os5qCp2EEfQ7Kh1g6lnk' // Clave de API de Supabase
     );
 
-    window.loginWithTwitter = async function () {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'twitter',
-        options: {
-          redirectTo: window.location.origin + '/bienvenido.html'
-        }
-      });
-      if (error) console.error('Error al iniciar sesión:', error.message);
+    // Función para verificar si el jugador existe y, si no, insertarlo en la tabla
+    async function checkAndInsertPlayer(user) {
+      const { data: existing, error: checkError } = await supabase
+        .from('players')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!existing && !checkError) {
+        // Si no existe, inserta el nuevo jugador
+        const { error: insertError } = await supabase.from('players').insert([{
+          user_id: user.id,
+          Nombres: user.user_metadata.full_name || user.email || 'Jugador desconocido',
+          Poderes: [],
+          Historia: [],
+          Decisiones: [],
+          Nivel_de_poder: 1,
+          Fecha_actualizacion: new Date().toISOString()
+        }]);
+
+        if (insertError) console.error('Error insertando jugador:', insertError.message);
+      }
     }
+
+    // Función para manejar el login
+    async function handleLogin() {
+      const { data: { session }, error } = await supabase.auth.getSession();
+
+      if (session?.user) {
+        // Si el usuario está logueado, verifica e inserta en la tabla
+        await checkAndInsertPlayer(session.user);
+        console.log('Jugador autenticado y registrado.');
+
+        // Redirige a la página principal o donde desees
+        window.location.href = 'dashboard.html'; // Aquí puedes redirigir al panel de usuario
+      } else {
+        console.error('No hay sesión activa:', error?.message);
+        // Si no hay sesión, redirige al login
+        window.location.href = 'index.html'; // Página de inicio de sesión
+      }
+    }
+
+    // Llamada inicial para manejar el login al cargar la página
+    handleLogin();
   </script>
+</head>
+<body>
+  <h1>Bienvenido a Kizuna no Unmei</h1>
+  <p>Cargando...</p>
 </body>
 </html>
