@@ -3,13 +3,14 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Método no permitido' });
   }
 
-  try {
-    const prompt = req.body.prompt;
+  const { prompt } = req.body;
+  const HF_TOKEN = process.env.HF_TOKEN;
 
+  try {
     const response = await fetch('https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.HF_TOKEN}`,
+        Authorization: `Bearer ${HF_TOKEN}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ inputs: prompt }),
@@ -18,11 +19,11 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     if (response.ok) {
-      res.status(200).json(data);
+      return res.status(200).json({ generated_text: data[0]?.generated_text });
     } else {
-      res.status(500).json({ error: 'Error desde Hugging Face', details: data });
+      return res.status(response.status).json({ error: data.error || 'Error desconocido' });
     }
   } catch (error) {
-    res.status(500).json({ error: 'Error interno del servidor', details: error.message });
+    return res.status(500).json({ error: 'Error en el servidor: ' + error.message });
   }
 }
