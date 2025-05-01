@@ -1,1 +1,22 @@
+name: Cron Job for Learning
 
+on:
+  schedule:
+    - cron: '*/3 * * * *'  # Esto ejecuta el job cada 3 minutos
+jobs:
+  run-cron-job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'  # Usa la versión de Node.js que tengas en tu proyecto
+
+      - name: Install dependencies
+        run: npm install  # Esto instalará todas las dependencias de tu proyecto
+
+      - name: Run trainNewWord script
+        run: node trainNewWord.js  # Esto ejecutará tu archivo trainNewWord.js
