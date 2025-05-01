@@ -1,9 +1,10 @@
-
 {
   "name": "alma",
   "version": "1.0.0",
   "type": "module",
   "dependencies": {
-    "@supabase/supabase-js": "^2.39.5"
+    "@supabase/supabase-js": "^2.39.5",
+    "node-fetch": "^3.4.0",
+    "compromise": "^13.11.3"
   }
 }
