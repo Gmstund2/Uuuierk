@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Kizuna no Unmei - Iniciar Sesión</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
     body {
       background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
@@ -56,13 +55,15 @@
     <button onclick="loginWithTwitter()">Iniciar sesión con Twitter</button>
   </div>
 
-  <script>
-    const supabase = supabase.createClient(
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js'
+
+    const supabase = createClient(
       'https://pzabjxoagrofosujjkre.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6YWJqeG9hZ3JvZm9zdWpqa3JlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU5NjcxMDYsImV4cCI6MjA2MTU0MzEwNn0.6815i2mnv7a9zvxdEJdXFe2os5qCp2EEfQ7Kh1g6lnk'
     );
 
-    async function loginWithTwitter() {
+    window.loginWithTwitter = async function () {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'twitter',
         options: {
