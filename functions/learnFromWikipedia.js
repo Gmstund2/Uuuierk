@@ -1,4 +1,4 @@
-// Archivo: functions/learnFromWikipedia.js
+// functions/learnFromWikipedia.js
 
 import { createClient } from '@supabase/supabase-js';
 import fetch from 'node-fetch';
@@ -21,6 +21,7 @@ export default async function handler(req, res) {
   const doc = nlp(texto);
   const terms = doc.terms().json();
 
+  // Insertar cada palabra y su tipo en la base de datos
   for (const term of terms) {
     await supabase.from('lexicon').insert({
       palabra: term.text,
@@ -32,4 +33,4 @@ export default async function handler(req, res) {
   }
 
   res.status(200).json({ mensaje: `Aprendí sobre ${topic}`, palabras: terms.length });
-                                                                   }
+}
