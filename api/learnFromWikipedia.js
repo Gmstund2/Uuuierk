@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 import fetch from 'node-fetch';
 import nlp from 'compromise';
@@ -38,6 +39,7 @@ export default async function handler(req, res) {
 
     res.status(200).json({ mensaje: `Aprendí sobre ${topic}`, palabras: terms.length });
   } catch (error) {
+    console.error('Error en el proceso:', error);
     res.status(500).json({ error: `Error en el proceso: ${error.message}` });
   }
-                                  }
+}
