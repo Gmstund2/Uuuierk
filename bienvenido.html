@@ -32,27 +32,16 @@
       max-width: 400px;
       text-align: center;
     }
-    button {
-      background-color: #ff66c4;
-      color: #fff;
-      padding: 12px;
-      width: 100%;
-      font-weight: bold;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      cursor: pointer;
-      box-shadow: 0 0 10px #ff66c4;
-    }
-    button:hover {
-      background-color: #ff33aa;
+    .mensaje {
+      margin-top: 20px;
+      font-size: 1.1rem;
     }
   </style>
 </head>
 <body>
   <h1>Bienvenido a Kizuna no Unmei</h1>
   <div class="login-box">
-    <button onclick="registerUser()">Registrar usuario</button>
+    <p class="mensaje" id="mensaje">Cargando datos del jugador...</p>
   </div>
 
   <script type="module">
@@ -63,40 +52,53 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6YWJqeG9hZ3JvZm9zdWpqa3JlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU5NjcxMDYsImV4cCI6MjA2MTU0MzEwNn0.6815i2mnv7a9zvxdEJdXFe2os5qCp2EEfQ7Kh1g6lnk'
     );
 
-    async function registerUser() {
-      const user = supabase.auth.user();
+    const mensaje = document.getElementById('mensaje');
 
-      if (user) {
-        // Verificamos si el usuario ya está en la tabla 'Jugadores'
-        const { data, error } = await supabase
-          .from('Jugadores')
-          .select('*')
-          .eq('user_id', user.id);
+    window.addEventListener('DOMContentLoaded', async () => {
+      const { data: { user }, error } = await supabase.auth.getUser();
 
-        if (data.length === 0) {
-          // Si no existe, insertamos el nuevo jugador
-          const { error: insertError } = await supabase
-            .from('Jugadores')
-            .insert([
-              {
-                user_id: user.id,
-                Nombres: user.user_metadata.full_name || 'No disponible',
-                Nivel_de_poder: 1, // Valor predeterminado para el nuevo jugador
-                Fecha_actualizacion: new Date().toISOString(),
-                // Puedes agregar otros valores predeterminados según sea necesario
-              }
-            ]);
-
-          if (insertError) {
-            console.error('Error al insertar los datos:', insertError.message);
-          } else {
-            console.log('Usuario registrado exitosamente en Jugadores');
-          }
-        } else {
-          console.log('El usuario ya existe en la tabla');
-        }
+      if (error || !user) {
+        console.error('No hay sesión activa:', error?.message);
+        window.location.href = '/index.html';
+        return;
       }
-    }
+
+      mensaje.textContent = `Hola, ${user.user_metadata.full_name || 'Jugador'}!`;
+
+      const { data: existing, error: selectError } = await supabase
+        .from('Players')
+        .select('id')
+        .eq('user_id', user.id);
+
+      if (selectError) {
+        console.error('Error al verificar el jugador:', selectError.message);
+        mensaje.textContent = 'Error al verificar tu perfil.';
+        return;
+      }
+
+      if (existing.length === 0) {
+        const { error: insertError } = await supabase
+          .from('Players')
+          .insert([{
+            user_id: user.id,
+            nombres: user.user_metadata.full_name || 'No disponible',
+            nivel_de_poder: 1,
+            poderes: {},
+            historia: {},
+            decisiones: {},
+            fecha_actualizacion: new Date().toISOString()
+          }]);
+
+        if (insertError) {
+          console.error('Error al registrar al jugador:', insertError.message);
+          mensaje.textContent = 'No se pudo registrar tu perfil.';
+        } else {
+          mensaje.textContent = '¡Tu perfil ha sido creado exitosamente!';
+        }
+      } else {
+        mensaje.textContent = '¡Tu perfil ya existe! Bienvenido de nuevo.';
+      }
+    });
   </script>
 </body>
 </html>
