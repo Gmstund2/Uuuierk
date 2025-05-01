@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Chat con Hugging Face</title>
+  <title>Chat con BlenderBot</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -40,7 +40,7 @@
   <button id="sendBtn" onclick="sendMessage()">Enviar</button>
 
   <script>
-    const apiKey = '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'; // Tu token
+    const apiKey = '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'; // Tu token actualizado
     const chatbox = document.getElementById('chatbox');
 
     async function sendMessage() {
@@ -52,7 +52,7 @@
       inputField.value = '';
 
       try {
-        const response = await fetch('https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium', {
+        const response = await fetch('https://api-inference.huggingface.co/models/facebook/blenderbot-1B-distill', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${apiKey}`,
@@ -62,8 +62,9 @@
         });
 
         const data = await response.json();
-        const botReply = data.generated_text || "Lo siento, no entendí.";
+        console.log(data); // útil para depuración
 
+        const botReply = data.generated_text || data[0]?.generated_text || "Lo siento, no entendí.";
         chatbox.innerHTML += `<p><strong>Bot:</strong> ${botReply}</p>`;
         chatbox.scrollTop = chatbox.scrollHeight;
       } catch (err) {
