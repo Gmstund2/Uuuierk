@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch('https://api-inference.huggingface.co/models/tiiuae/falcon-1b-instruct', {
+    const response = await fetch('https://api-inference.huggingface.co/models/EleutherAI/gpt-neo-1.3B', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${process.env.HF_TOKEN}`,
