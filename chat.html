@@ -14,43 +14,54 @@
     }
 
     .container {
-      max-width: 700px;
+      max-width: 800px;
       margin: auto;
       background-color: #fff;
       padding: 30px;
       border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
     }
 
     h1 {
       color: #8e44ad;
       text-align: center;
+      font-size: 2em;
     }
 
     .historia {
-      margin-top: 20px;
-      font-size: 1.2em;
-      line-height: 1.6;
+      margin-top: 30px;
+      font-size: 1.3em;
+      line-height: 1.8;
       background: #f9f9f9;
-      padding: 20px;
-      border-left: 5px solid #8e44ad;
+      padding: 25px;
+      border-left: 8px solid #8e44ad;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      color: #555;
+      text-align: justify;
     }
 
     button {
       display: block;
       margin: 20px auto;
-      padding: 12px 24px;
-      font-size: 1em;
+      padding: 15px 25px;
+      font-size: 1.2em;
       background-color: #8e44ad;
       color: white;
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      transition: background 0.3s;
+      transition: background 0.3s ease;
     }
 
     button:hover {
       background-color: #732d91;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 0.9em;
+      margin-top: 30px;
+      color: #888;
     }
   </style>
 </head>
@@ -61,22 +72,33 @@
     <div class="historia" id="resultado"></div>
   </div>
 
+  <footer>
+    <p>Generador de historias | Hecho por un aprendiz</p>
+  </footer>
+
   <script>
-    const personajes = ["un joven", "una anciana", "un guerrero"];
-    const lugares = ["en una aldea lejana", "en un planeta desierto", "en una torre de cristal"];
-    const objetivos = ["encontrar la verdad", "salvar a su gente", "descubrir un poder oculto"];
-    const obstaculos = ["una bestia ancestral", "una traición inesperada", "su propio miedo"];
+    const personajes = [
+      "un joven valiente", "una anciana sabia", "un guerrero solitario", "una hechicera misteriosa", "un niño curioso"
+    ];
+    const lugares = [
+      "en una aldea apartada en las montañas", "en un vasto y árido desierto", "en un oscuro y antiguo bosque", "en una torre perdida entre las nubes"
+    ];
+    const objetivos = [
+      "desentrañar el misterio de un antiguo artefacto", "salvar a su pueblo de la destrucción", "descubrir la verdad oculta de su linaje", "vengar la muerte de un ser querido"
+    ];
+    const obstaculos = [
+      "un monstruo feroz con ojos de fuego", "una traición profunda de alguien cercano", "la corrupción de su propia alma", "un hechizo ancestral que bloquea su mente"
+    ];
     const finales = [
-      "y cambió para siempre.",
-      "pero su corazón no volvió a ser el mismo.",
-      "y logró redimirse."
+      "y encontró una paz inesperada", "pero el precio fue más alto de lo que imaginaba", "y su destino cambió para siempre", "y se dio cuenta de que la verdadera fuerza venía del amor"
     ];
 
     const arcos = [
-      { inicio: "miedoso", evento: "enfrentó su miedo", final: "valiente" },
-      { inicio: "ambicioso", evento: "perdió todo", final: "humilde" },
-      { inicio: "solitario", evento: "salvó a un grupo", final: "aceptado" },
-      { inicio: "inocente", evento: "fue traicionado", final: "desilusionado" },
+      { inicio: "miedoso", evento: "superó sus peores temores", final: "valiente" },
+      { inicio: "ambicioso", evento: "perdió todo lo que valoraba", final: "humilde" },
+      { inicio: "solitario", evento: "construyó una familia con extraños", final: "aceptado" },
+      { inicio: "inocente", evento: "descubrió la cruel verdad del mundo", final: "desilusionado" },
+      { inicio: "desesperado", evento: "se sacrificó por los demás", final: "redimido" }
     ];
 
     function elegirAleatorio(lista) {
@@ -91,9 +113,9 @@
       const final = elegirAleatorio(finales);
       const arco = elegirAleatorio(arcos);
 
-      const historia = `${personaje}, que era ${arco.inicio}, vivía ${lugar}. ` +
-        `Su meta era ${objetivo}, pero se enfrentó a ${obstaculo}. ` +
-        `Durante el camino, ${arco.evento}, y se volvió ${arco.final}. ` +
+      const historia = `${personaje}, quien comenzó su viaje siendo ${arco.inicio}, vivía ${lugar}. ` +
+        `Su objetivo era ${objetivo}, pero a lo largo del camino se encontró con ${obstaculo}, lo que puso a prueba su espíritu. ` +
+        `En el proceso, ${arco.evento} y fue transformado en alguien completamente diferente, alguien más fuerte y sabio. ` +
         `Finalmente, ${final}`;
 
       document.getElementById("resultado").textContent = historia;
