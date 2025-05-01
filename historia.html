@@ -1,22 +1,38 @@
-<form id="storyForm">
-  <textarea id="prompt" placeholder="Escribe tu historia..." rows="6"></textarea>
-  <button type="submit">Enviar</button>
-</form>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Generador de Historias</title>
+</head>
+<body>
+  <form id="storyForm">
+    <textarea id="prompt" placeholder="Escribe tu historia..." rows="6" cols="50"></textarea><br>
+    <button type="submit">Enviar</button>
+  </form>
 
-<div id="resultado"></div>
+  <div id="resultado" style="margin-top: 20px;"></div>
 
-<script>
-  document.getElementById('storyForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const prompt = document.getElementById('prompt').value;
+  <script>
+    document.getElementById('storyForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const prompt = document.getElementById('prompt').value;
+      const resultadoDiv = document.getElementById('resultado');
 
-    const res = await fetch('/api/huggingface', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt })
+      resultadoDiv.innerText = "Generando historia...";
+
+      try {
+        const res = await fetch('https://uuuierk.vercel.app/api/huggingface', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt })
+        });
+
+        const data = await res.json();
+        resultadoDiv.innerText = data.result || data.error || 'Error desconocido';
+      } catch (error) {
+        resultadoDiv.innerText = 'Error al conectar con el servidor.';
+      }
     });
-
-    const data = await res.json();
-    document.getElementById('resultado').innerText = data.result || data.error;
-  });
-</script>
+  </script>
+</body>
+</html>
