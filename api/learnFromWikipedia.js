@@ -4,31 +4,54 @@ import nlp from 'compromise';
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
+// Refuerza conexión entre dos palabras
+async function reforzarConexion(origen, destino, refuerzo = 1, contexto = '') {
+  const { data: existente } = await supabase
+    .from('conexiones')
+    .select('id, fuerza')
+    .eq('origen', origen)
+    .eq('destino', destino)
+    .limit(1)
+    .single();
+
+  if (existente) {
+    await supabase
+      .from('conexiones')
+      .update({ fuerza: existente.fuerza + refuerzo })
+      .eq('id', existente.id);
+  } else {
+    await supabase.from('conexiones').insert({
+      origen,
+      destino,
+      fuerza: refuerzo,
+      contexto
+    });
+  }
+}
+
 export default async function handler(req, res) {
   try {
     let { topic } = req.query;
 
-    // Buscar tema si no se especificó
     if (!topic) {
-      const { data: pendientes, error } = await supabase
+      const { data: pendientes } = await supabase
         .from('pendientes')
         .select('palabra')
         .order('creada_en', { ascending: true })
         .limit(1);
 
-      if (error || !pendientes || pendientes.length === 0) {
-        return res.status(200).json({ mensaje: 'No hay temas pendientes por aprender.' });
+      if (!pendientes || pendientes.length === 0) {
+        return res.status(200).json({ mensaje: 'No hay temas pendientes.' });
       }
 
       topic = pendientes[0].palabra;
     }
 
-    // Obtener resumen de Wikipedia
     const url = `https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topic)}`;
     const response = await fetch(url);
 
     if (!response.ok) {
-      return res.status(500).json({ error: `Error al obtener datos desde Wikipedia: ${response.statusText}` });
+      return res.status(500).json({ error: `Error al obtener Wikipedia: ${response.statusText}` });
     }
 
     const data = await response.json();
@@ -44,7 +67,6 @@ export default async function handler(req, res) {
       let palabra = term.text.toLowerCase().replace(/[.,;:()¿?¡!"“”]/g, '').trim();
       if (palabra.length < 3 || palabra === topic.toLowerCase()) continue;
 
-      // Verifica si ya existe en lexicon
       const { data: existe } = await supabase
         .from('lexicon')
         .select('palabra')
@@ -53,7 +75,6 @@ export default async function handler(req, res) {
 
       if (existe && existe.length > 0) continue;
 
-      // Insertar en lexicon
       await supabase.from('lexicon').insert({
         palabra,
         tipo: term.bestTag || 'desconocido',
@@ -65,12 +86,20 @@ export default async function handler(req, res) {
       nuevasPendientes.push(palabra);
     }
 
-    // Insertar en pendientes sin repetir
     for (const palabra of nuevasPendientes) {
       await supabase.from('pendientes').upsert({ palabra }, { onConflict: ['palabra'] });
+      await reforzarConexion(topic, palabra, 0.2, 'extraída de Wikipedia');
     }
 
-    // Eliminar el topic procesado
+    // Relaciones cruzadas entre las nuevas palabras
+    for (let i = 0; i < nuevasPendientes.length; i++) {
+      for (let j = 0; j < nuevasPendientes.length; j++) {
+        if (i !== j) {
+          await reforzarConexion(nuevasPendientes[i], nuevasPendientes[j], 0.05, `co-ocurrencia con ${topic}`);
+        }
+      }
+    }
+
     await supabase.from('pendientes').delete().eq('palabra', topic);
 
     res.status(200).json({
@@ -80,7 +109,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('Error en el proceso:', error);
-    res.status(500).json({ error: `Error en el proceso: ${error.message}` });
+    console.error('Error:', error);
+    res.status(500).json({ error: `Fallo en el aprendizaje: ${error.message}` });
   }
-        }
+}
