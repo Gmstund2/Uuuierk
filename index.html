@@ -2,70 +2,93 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Aprendiz de Wikipedia</title>
+  <title>Autoaprendizaje Wikipedia</title>
   <style>
     body {
       font-family: sans-serif;
-      padding: 2rem;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 600px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
     input {
-      padding: 0.5rem;
+      padding: 10px;
       width: 100%;
-      margin: 0.5rem 0;
+      margin-top: 10px;
     }
     button {
-      padding: 0.5rem 1rem;
+      padding: 10px;
+      margin-top: 10px;
+      background: #007bff;
+      color: white;
+      border: none;
+      width: 100%;
+      cursor: pointer;
+    }
+    #resultado {
+      margin-top: 20px;
+      padding: 10px;
+      background: #e9ffe9;
+      border: 1px solid #b2ffb2;
     }
   </style>
 </head>
 <body>
-  <h1>Aprender desde Wikipedia</h1>
-
-  <label for="temaManual">Buscar tema manual:</label>
-  <input type="text" id="temaManual" placeholder="Escribe un tema (opcional)">
-  <button onclick="aprender()">Aprender</button>
-
-  <hr>
-
-  <div id="resultado"></div>
-
-  <label for="sugerenciaInput">Siguiente sugerencia (auto):</label>
-  <input type="text" id="sugerenciaInput" readonly>
+  <div class="container">
+    <h2>Aprendizaje Automático de Wikipedia</h2>
+    <input type="text" id="inputManual" placeholder="Escribe una palabra para aprender...">
+    <button onclick="buscar()">Aprender ahora</button>
+    <input type="text" id="inputAuto" placeholder="Auto-sugerencia..." readonly>
+    <div id="resultado"></div>
+  </div>
 
   <script>
-    async function aprender(tema = '') {
+    async function buscar(palabraManual = null) {
+      const inputManual = document.getElementById("inputManual");
+      const inputAuto = document.getElementById("inputAuto");
+      const resultado = document.getElementById("resultado");
+
+      let palabra = palabraManual || inputManual.value.trim();
+      if (!palabra) {
+        palabra = inputAuto.value.trim();
+      }
+
+      if (!palabra) return;
+
       try {
-        const query = tema ? `?topic=${encodeURIComponent(tema)}` : '';
-        const res = await fetch('/api/learnFromWikipedia' + query);
+        const res = await fetch(`/api/learnFromWikipedia?topic=${encodeURIComponent(palabra)}`);
         const data = await res.json();
 
-        console.log('Respuesta del backend:', data);
-
-        document.getElementById('resultado').innerText = data.mensaje || 'Sin mensaje';
-
-        if (data.sugerencia) {
-          document.getElementById('sugerenciaInput').value = data.sugerencia;
-
-          setTimeout(() => {
-            aprender(data.sugerencia);
-          }, 10000); // Espera 10 segundos y repite
-        } else {
-          document.getElementById('sugerenciaInput').value = '';
+        if (data.status === 'done') {
+          resultado.innerText = "No hay más temas pendientes.";
+          inputAuto.value = '';
+          return;
         }
-      } catch (error) {
-        console.error('Error en frontend:', error);
-        document.getElementById('resultado').innerText = 'Error en el proceso';
+
+        resultado.innerText = data.mensaje || "Aprendizaje completado.";
+        if (data.sugerencia) {
+          inputAuto.value = data.sugerencia;
+        }
+      } catch (err) {
+        resultado.innerText = "Error: " + err.message;
       }
     }
 
-    // También permite lanzar manualmente desde el input
-    document.querySelector('button').addEventListener('click', () => {
-      const tema = document.getElementById('temaManual').value.trim();
-      aprender(tema);
-    });
-
-    // Lanza una primera búsqueda automáticamente
-    aprender();
+    // Ejecutar cada 10 segundos si hay sugerencia
+    setInterval(() => {
+      const inputAuto = document.getElementById("inputAuto");
+      if (inputAuto.value.trim()) {
+        buscar(inputAuto.value.trim());
+      } else {
+        buscar(); // usará la tabla 'pendientes' si no hay sugerencia previa
+      }
+    }, 10000);
   </script>
 </body>
 </html>
