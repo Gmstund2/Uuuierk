@@ -4,40 +4,47 @@ import nlp from 'compromise';
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
+async function obtenerPendiente() {
+  const { data, error } = await supabase
+    .from('pendientes')
+    .select('palabra')
+    .order('creada_en', { ascending: true })
+    .limit(1);
+
+  if (error || !data || data.length === 0) return null;
+  return data[0].palabra;
+}
+
 export default async function handler(req, res) {
   try {
     let { topic } = req.query;
-
     if (!topic) {
-      const { data: pendientes, error } = await supabase
-        .from('pendientes')
-        .select('palabra')
-        .order('creada_en', { ascending: true })
-        .limit(1);
-
-      if (error || !pendientes || pendientes.length === 0) {
-        return res.status(200).json({ 
+      topic = await obtenerPendiente();
+      if (!topic) {
+        return res.status(200).json({
           status: 'done',
           mensaje: 'No hay temas pendientes por aprender.',
-          sugerencia: null 
+          sugerencia: null
         });
       }
-
-      topic = pendientes[0].palabra;
     }
 
     const url = `https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topic)}`;
     const response = await fetch(url);
 
     if (!response.ok) {
-      return res.status(500).json({ 
-        status: 'error', 
-        error: `Error al obtener datos desde Wikipedia: ${response.statusText}` 
-      });
+      console.warn(`Wikipedia no respondió correctamente para ${topic}, se buscará otro tema...`);
+      const nuevoTopic = await obtenerPendiente();
+      if (!nuevoTopic || nuevoTopic === topic) {
+        return res.status(404).json({ status: 'not_found', error: 'Tema no encontrado y sin más pendientes.' });
+      }
+      req.query.topic = nuevoTopic;
+      return handler(req, res); // retry con nuevo topic
     }
 
     const data = await response.json();
     if (!data.extract) {
+      await supabase.from('pendientes').delete().eq('palabra', topic); // limpiar si Wikipedia no lo reconoce
       return res.status(404).json({ status: 'not_found', error: 'Tema no encontrado' });
     }
 
@@ -68,7 +75,7 @@ export default async function handler(req, res) {
 
     await supabase.from('pendientes').delete().eq('palabra', topic);
 
-    const sugerencia = nuevasPendientes.find(p => p !== topic.toLowerCase()) || null;
+    const sugerencia = nuevasPendientes.find(p => p !== topic.toLowerCase()) || await obtenerPendiente();
 
     res.status(200).json({
       status: 'ok',
@@ -81,4 +88,4 @@ export default async function handler(req, res) {
     console.error('Error en el proceso:', error);
     res.status(500).json({ status: 'error', error: `Error en el proceso: ${error.message}` });
   }
-  }
+}
