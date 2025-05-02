@@ -16,7 +16,11 @@ export default async function handler(req, res) {
         .limit(1);
 
       if (error || !pendientes || pendientes.length === 0) {
-        return res.status(200).json({ mensaje: 'No hay temas pendientes por aprender.' });
+        return res.status(200).json({ 
+          status: 'done',
+          mensaje: 'No hay temas pendientes por aprender.',
+          sugerencia: null 
+        });
       }
 
       topic = pendientes[0].palabra;
@@ -26,11 +30,16 @@ export default async function handler(req, res) {
     const response = await fetch(url);
 
     if (!response.ok) {
-      return res.status(500).json({ error: `Error al obtener datos desde Wikipedia: ${response.statusText}` });
+      return res.status(500).json({ 
+        status: 'error', 
+        error: `Error al obtener datos desde Wikipedia: ${response.statusText}` 
+      });
     }
 
     const data = await response.json();
-    if (!data.extract) return res.status(404).json({ error: 'Tema no encontrado' });
+    if (!data.extract) {
+      return res.status(404).json({ status: 'not_found', error: 'Tema no encontrado' });
+    }
 
     const texto = data.extract;
     const doc = nlp(texto);
@@ -58,15 +67,17 @@ export default async function handler(req, res) {
 
     await supabase.from('pendientes').delete().eq('palabra', topic);
 
-    // Enviar la sugerencia al frontend
+    const sugerencia = nuevasPendientes[0] || null;
+
     res.status(200).json({
+      status: 'ok',
       mensaje: `Aprendí sobre ${topic}`,
       palabras: terms.length,
-      sugerencia: nuevasPendientes[0] || ''
+      sugerencia
     });
 
   } catch (error) {
     console.error('Error en el proceso:', error);
-    res.status(500).json({ error: `Error en el proceso: ${error.message}` });
+    res.status(500).json({ status: 'error', error: `Error en el proceso: ${error.message}` });
   }
-        }
+}
