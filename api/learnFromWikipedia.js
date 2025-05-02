@@ -26,20 +26,11 @@ export default async function handler(req, res) {
     const response = await fetch(url);
 
     if (!response.ok) {
-      return res.status(500).json({
-        error: `Error al obtener datos desde Wikipedia: ${response.statusText}`,
-        mensaje: 'Hubo un problema al obtener la información de Wikipedia.'
-      });
+      return res.status(500).json({ error: `Error al obtener datos desde Wikipedia: ${response.statusText}` });
     }
 
     const data = await response.json();
-
-    if (!data.extract) {
-      return res.status(404).json({
-        error: 'Tema no encontrado',
-        mensaje: 'No se pudo encontrar información sobre el tema solicitado.'
-      });
-    }
+    if (!data.extract) return res.status(404).json({ error: 'Tema no encontrado' });
 
     const texto = data.extract;
     const doc = nlp(texto);
@@ -67,6 +58,7 @@ export default async function handler(req, res) {
 
     await supabase.from('pendientes').delete().eq('palabra', topic);
 
+    // Enviar la sugerencia al frontend
     res.status(200).json({
       mensaje: `Aprendí sobre ${topic}`,
       palabras: terms.length,
@@ -75,9 +67,6 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Error en el proceso:', error);
-    res.status(500).json({
-      error: `Error en el proceso: ${error.message}`,
-      mensaje: 'Hubo un error interno al procesar la solicitud.'
-    });
+    res.status(500).json({ error: `Error en el proceso: ${error.message}` });
   }
         }
