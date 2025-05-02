@@ -5,10 +5,7 @@ import nlp from 'compromise';
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
 function limpiarTexto(texto) {
-  return texto
-    .toLowerCase()
-    .replace(/[.,;:()¿?¡!"“”]/g, '')
-    .trim();
+  return texto.toLowerCase().replace(/[.,;:()¿?¡!"“”]/g, '').trim();
 }
 
 function capitalizar(texto) {
@@ -17,37 +14,36 @@ function capitalizar(texto) {
 
 export default async function handler(req, res) {
   try {
-    let { topic } = req.query;
+    let topic = null;
 
-    // Buscar tema si no se especificó
-    if (!topic) {
-      const { data: pendientes, error } = await supabase
-        .from('pendientes')
-        .select('palabra')
-        .order('creada_en', { ascending: true })
-        .limit(1);
+    // Bucle para intentar varios temas
+    const { data: pendientes } = await supabase
+      .from('pendientes')
+      .select('palabra')
+      .order('creada_en', { ascending: true })
+      .limit(10); // intenta los primeros 10
 
-      if (error || !pendientes || pendientes.length === 0) {
-        return res.status(200).json({ mensaje: 'No hay temas pendientes por aprender.' });
+    for (const pendiente of pendientes || []) {
+      const posible = limpiarTexto(pendiente.palabra);
+      const url = `https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(capitalizar(posible))}`;
+      const respuesta = await fetch(url);
+
+      if (respuesta.ok) {
+        topic = posible;
+        break;
+      } else {
+        // Eliminar tema que no existe
+        await supabase.from('pendientes').delete().eq('palabra', posible);
       }
-
-      topic = pendientes[0].palabra;
     }
 
-    topic = limpiarTexto(topic);
+    if (!topic) {
+      return res.status(200).json({ mensaje: 'No se encontró ningún tema válido en Wikipedia.' });
+    }
+
     const topicCapitalizado = capitalizar(topic);
-
-    const url = `https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topicCapitalizado)}`;
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      return res.status(404).json({ error: `No se encontró Wikipedia para el tema: ${topicCapitalizado}`, topic });
-    }
-
+    const response = await fetch(`https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topicCapitalizado)}`);
     const data = await response.json();
-    if (!data.extract) {
-      return res.status(404).json({ error: `No se encontró resumen para el tema: ${topicCapitalizado}`, topic });
-    }
 
     const texto = data.extract;
     const doc = nlp(texto);
@@ -78,7 +74,7 @@ export default async function handler(req, res) {
       nuevasPendientes.push(palabra);
     }
 
-    // Conexiones laterales (estructura tipo red)
+    // Conexiones laterales
     for (let i = 0; i < nuevasPendientes.length; i++) {
       for (let j = i + 1; j < nuevasPendientes.length; j++) {
         const palabra1 = nuevasPendientes[i];
@@ -92,10 +88,12 @@ export default async function handler(req, res) {
       }
     }
 
+    // Guardar nuevas pendientes
     for (const palabra of nuevasPendientes) {
       await supabase.from('pendientes').upsert({ palabra }, { onConflict: ['palabra'] });
     }
 
+    // Eliminar el topic procesado
     await supabase.from('pendientes').delete().eq('palabra', topic);
 
     res.status(200).json({
@@ -109,4 +107,4 @@ export default async function handler(req, res) {
     console.error('Error en el proceso:', error);
     res.status(500).json({ error: `Error en el proceso: ${error.message}` });
   }
-}
+          }
