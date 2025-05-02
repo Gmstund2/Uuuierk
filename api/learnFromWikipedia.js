@@ -26,7 +26,11 @@ export default async function handler(req, res) {
       topic = pendientes[0].palabra;
     }
 
-    const topicCapitalizado = topic.charAt(0).toUpperCase() + topic.slice(1);
+    // Limpiar y capitalizar el topic
+    const limpio = topic.trim().replace(/[.,;:()¿?¡!"“”]/g, '');
+    const topicCapitalizado = limpio.charAt(0).toUpperCase() + limpio.slice(1);
+
+    // Obtener resumen de Wikipedia
     const url = `https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topicCapitalizado)}`;
     const response = await fetch(url);
 
@@ -53,7 +57,7 @@ export default async function handler(req, res) {
 
     for (const term of terms) {
       let palabra = term.text.toLowerCase().replace(/[.,;:()¿?¡!"“”]/g, '').trim();
-      if (palabra.length < 3 || palabra === topic.toLowerCase()) continue;
+      if (palabra.length < 3 || palabra === limpio.toLowerCase()) continue;
 
       const { data: existe } = await supabase
         .from('lexicon')
@@ -67,7 +71,7 @@ export default async function handler(req, res) {
         palabra,
         tipo: term.bestTag || 'desconocido',
         ejemplo_uso: texto,
-        relacionado_a: topic,
+        relacionado_a: limpio,
         idioma: 'es'
       });
 
