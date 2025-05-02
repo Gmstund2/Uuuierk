@@ -1,9 +1,19 @@
-
 import { createClient } from '@supabase/supabase-js';
 import fetch from 'node-fetch';
 import nlp from 'compromise';
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+
+function limpiarTexto(texto) {
+  return texto
+    .toLowerCase()
+    .replace(/[.,;:()¿?¡!"“”]/g, '')
+    .trim();
+}
+
+function capitalizar(texto) {
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
 
 export default async function handler(req, res) {
   try {
@@ -24,31 +34,31 @@ export default async function handler(req, res) {
       topic = pendientes[0].palabra;
     }
 
-    topic = topic.trim().replace(/[.,;:()¿?¡!"“”]/g, '');
-    const cleanTopic = topic;
+    topic = limpiarTexto(topic);
+    const topicCapitalizado = capitalizar(topic);
 
-    // Obtener resumen de Wikipedia
-    const url = `https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(cleanTopic)}`;
+    const url = `https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topicCapitalizado)}`;
     const response = await fetch(url);
 
     if (!response.ok) {
-      return res.status(500).json({ error: `Error al obtener datos desde Wikipedia: ${response.statusText}` });
+      return res.status(404).json({ error: `No se encontró Wikipedia para el tema: ${topicCapitalizado}`, topic });
     }
 
     const data = await response.json();
-    if (!data.extract) return res.status(404).json({ error: `No se encontró Wikipedia para el tema: ${cleanTopic}`, topic: cleanTopic });
+    if (!data.extract) {
+      return res.status(404).json({ error: `No se encontró resumen para el tema: ${topicCapitalizado}`, topic });
+    }
 
     const texto = data.extract;
     const doc = nlp(texto);
     const terms = doc.terms().json();
 
-    let nuevasPalabras = [];
+    let nuevasPendientes = [];
 
     for (const term of terms) {
-      let palabra = term.text.toLowerCase().replace(/[.,;:()¿?¡!"“”]/g, '').trim();
-      if (palabra.length < 3 || palabra === topic.toLowerCase()) continue;
+      let palabra = limpiarTexto(term.text);
+      if (palabra.length < 3 || palabra === topic) continue;
 
-      // Verifica si ya existe en lexicon
       const { data: existe } = await supabase
         .from('lexicon')
         .select('palabra')
@@ -57,7 +67,6 @@ export default async function handler(req, res) {
 
       if (existe && existe.length > 0) continue;
 
-      // Insertar en lexicon
       await supabase.from('lexicon').insert({
         palabra,
         tipo: term.bestTag || 'desconocido',
@@ -66,51 +75,34 @@ export default async function handler(req, res) {
         idioma: 'es'
       });
 
-      nuevasPalabras.push(palabra);
+      nuevasPendientes.push(palabra);
     }
 
-    // Insertar en pendientes sin repetir
-    for (const palabra of nuevasPalabras) {
-      await supabase.from('pendientes').upsert({ palabra }, { onConflict: ['palabra'] });
-    }
+    // Conexiones laterales (estructura tipo red)
+    for (let i = 0; i < nuevasPendientes.length; i++) {
+      for (let j = i + 1; j < nuevasPendientes.length; j++) {
+        const palabra1 = nuevasPendientes[i];
+        const palabra2 = nuevasPendientes[j];
 
-    // Insertar conexiones laterales entre palabras nuevas
-    for (let i = 0; i < nuevasPalabras.length; i++) {
-      for (let j = i + 1; j < nuevasPalabras.length; j++) {
-        const palabraA = nuevasPalabras[i];
-        const palabraB = nuevasPalabras[j];
-
-        await supabase.from('relaciones').upsert({
-          palabra_a: palabraA,
-          palabra_b: palabraB,
-          contexto: topic,
+        await supabase.from('conexiones').upsert({
+          palabra1,
+          palabra2,
           fuerza: 1
-        }, {
-          onConflict: ['palabra_a', 'palabra_b', 'contexto'],
-          ignoreDuplicates: false
-        });
-
-        // Inserta también la conexión inversa para simetría
-        await supabase.from('relaciones').upsert({
-          palabra_a: palabraB,
-          palabra_b: palabraA,
-          contexto: topic,
-          fuerza: 1
-        }, {
-          onConflict: ['palabra_a', 'palabra_b', 'contexto'],
-          ignoreDuplicates: false
-        });
+        }, { onConflict: ['palabra1', 'palabra2'], ignoreDuplicates: false });
       }
     }
 
-    // Eliminar el topic procesado
+    for (const palabra of nuevasPendientes) {
+      await supabase.from('pendientes').upsert({ palabra }, { onConflict: ['palabra'] });
+    }
+
     await supabase.from('pendientes').delete().eq('palabra', topic);
 
     res.status(200).json({
-      mensaje: `Aprendí sobre "${topic}"`,
-      palabras: nuevasPalabras.length,
-      sugerencia: nuevasPalabras[0] || '',
-      topic
+      mensaje: `Aprendí sobre "${topicCapitalizado}"`,
+      palabras: nuevasPendientes.length,
+      sugerencia: nuevasPendientes[0] || '',
+      topic: topicCapitalizado
     });
 
   } catch (error) {
