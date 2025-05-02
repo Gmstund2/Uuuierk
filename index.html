@@ -55,27 +55,31 @@
       const usuarioInput = document.getElementById('usuarioInput');
       const loadingText = document.getElementById('loadingText');
 
-      // Obtener sugerencia desde el backend
+      // Primera llamada para obtener sugerencia
       const res = await fetch('/api/learnFromWikipedia');
       const data = await res.json();
       const sugerencia = data.sugerencia || '';
 
       sugerenciaInput.value = sugerencia;
 
-      // Esperar 10 segundos y luego buscar
       setTimeout(async () => {
-        loadingText.style.display = 'block';
+        let valorUsuario = usuarioInput.value.trim();
 
-        const valorUsuario = usuarioInput.value.trim();
-        const temaFinal = valorUsuario || sugerencia;
+        // Si el usuario no escribió nada, usamos la sugerencia
+        if (!valorUsuario && sugerencia) {
+          usuarioInput.value = sugerencia; // la pegamos en el input editable
+          valorUsuario = sugerencia;
+        }
 
-        if (!temaFinal) {
+        if (!valorUsuario) {
           alert('No hay tema para buscar');
           return;
         }
 
+        loadingText.style.display = 'block';
+
         try {
-          const buscar = await fetch(`/api/learnFromWikipedia?topic=${encodeURIComponent(temaFinal)}`);
+          const buscar = await fetch(`/api/learnFromWikipedia?topic=${encodeURIComponent(valorUsuario)}`);
           const resultado = await buscar.json();
           alert(resultado.mensaje || 'Búsqueda completada');
         } catch (err) {
@@ -83,7 +87,7 @@
         } finally {
           loadingText.style.display = 'none';
         }
-      }, 10000); // 10 segundos
+      }, 10000); // después de 10 segundos
     });
   </script>
 </body>
