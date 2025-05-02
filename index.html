@@ -1,116 +1,94 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aprender de Wikipedia</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f4f9;
-        }
-        .container {
-            max-width: 600px;
-            margin: auto;
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            text-align: center;
-            color: #333;
-        }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-        input[type="text"] {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 15px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            border-radius: 5px;
-            width: 100%;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        .result {
-            margin-top: 20px;
-            padding: 20px;
-            background-color: #e9f7e7;
-            border-radius: 8px;
-            border: 1px solid #d4edda;
-            color: #155724;
-        }
-        .error {
-            margin-top: 20px;
-            padding: 20px;
-            background-color: #f8d7da;
-            border-radius: 8px;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aprende sobre un tema de Wikipedia</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    input {
+      padding: 10px;
+      font-size: 16px;
+      width: 100%;
+      margin-top: 10px;
+      box-sizing: border-box;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .loading {
+      display: none;
+      margin-top: 20px;
+      color: #4CAF50;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Aprender desde Wikipedia</h1>
-        <form id="topicForm">
-            <label for="topic">Introduce un tema (opcional):</label>
-            <input type="text" id="topic" name="topic" placeholder="Ejemplo: Historia de España">
-            <button type="submit">Aprender</button>
-        </form>
+  <h1>Aprende sobre un tema de Wikipedia</h1>
+  
+  <!-- Mostrar la sugerencia del tema -->
+  <div>
+    <label for="topicInput">Tema sugerido:</label>
+    <input type="text" id="topicInput" placeholder="Tema sugerido aparecerá aquí..." readonly />
+  </div>
+  
+  <div class="loading" id="loadingText">Esperando 10 segundos...</div>
 
-        <div id="result"></div>
-        <div id="error" class="error" style="display: none;"></div>
-    </div>
+  <!-- Botón para iniciar la búsqueda manualmente -->
+  <button id="startSearchBtn">Iniciar búsqueda</button>
 
-    <script>
-        document.getElementById('topicForm').addEventListener('submit', async function(event) {
-            event.preventDefault();
+  <script>
+    document.addEventListener('DOMContentLoaded', async function () {
+      const topicInput = document.getElementById('topicInput');
+      const loadingText = document.getElementById('loadingText');
+      const startSearchBtn = document.getElementById('startSearchBtn');
 
-            const topic = document.getElementById('topic').value.trim();
-            const resultDiv = document.getElementById('result');
-            const errorDiv = document.getElementById('error');
+      // Hacer la solicitud para obtener la sugerencia
+      const response = await fetch('/api/learnFromWikipedia');
+      const data = await response.json();
 
-            resultDiv.innerHTML = '';
-            errorDiv.style.display = 'none';
+      // Colocar la sugerencia en el input
+      if (data.sugerencia) {
+        topicInput.value = data.sugerencia;
+      }
 
-            try {
-                const response = await fetch(`/api/learn?topic=${topic}`);
-                const data = await response.json();
+      // Cuando el botón es presionado, iniciamos la búsqueda manualmente
+      startSearchBtn.addEventListener('click', async function() {
+        await searchTopic(topicInput.value);
+      });
 
-                if (response.ok) {
-                    resultDiv.innerHTML = `
-                        <div class="result">
-                            <strong>Mensaje:</strong> ${data.mensaje}<br>
-                            <strong>Palabras procesadas:</strong> ${data.palabras}<br>
-                            <strong>Sugerencia:</strong> ${data.sugerencia}
-                        </div>
-                    `;
-                } else {
-                    errorDiv.style.display = 'block';
-                    errorDiv.innerHTML = `Error: ${data.error}`;
-                }
-            } catch (error) {
-                errorDiv.style.display = 'block';
-                errorDiv.innerHTML = `Hubo un error en el proceso: ${error.message}`;
-            }
-        });
-    </script>
+      // Función para realizar la búsqueda con el tema sugerido
+      async function searchTopic(topic) {
+        loadingText.style.display = 'block'; // Mostrar mensaje de carga
+        try {
+          const res = await fetch(`/api/learnFromWikipedia?topic=${topic}`);
+          const responseData = await res.json();
+          if (responseData.mensaje) {
+            alert(responseData.mensaje); // Alertar al usuario sobre el resultado
+          }
+        } catch (error) {
+          alert('Hubo un error al intentar realizar la búsqueda.');
+        } finally {
+          loadingText.style.display = 'none'; // Ocultar mensaje de carga
+        }
+      }
+
+      // Hacer la búsqueda automáticamente después de 10 segundos
+      setTimeout(async function() {
+        await searchTopic(topicInput.value);
+      }, 10000); // Esperar 10 segundos
+    });
+  </script>
 </body>
-  </html>
+</html>
