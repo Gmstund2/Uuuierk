@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 import fetch from 'node-fetch';
 import nlp from 'compromise';
@@ -5,7 +6,10 @@ import nlp from 'compromise';
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
 function limpiarTexto(texto) {
-  return texto.toLowerCase().replace(/[.,;:()¿?¡!"“”]/g, '').trim();
+  return texto
+    .toLowerCase()
+    .replace(/[.,;:()¿?¡!"“”]/g, '')
+    .trim();
 }
 
 function capitalizar(texto) {
@@ -14,36 +18,37 @@ function capitalizar(texto) {
 
 export default async function handler(req, res) {
   try {
-    let topic = null;
+    let { topic } = req.query;
 
-    // Bucle para intentar varios temas
-    const { data: pendientes } = await supabase
-      .from('pendientes')
-      .select('palabra')
-      .order('creada_en', { ascending: true })
-      .limit(10); // intenta los primeros 10
-
-    for (const pendiente of pendientes || []) {
-      const posible = limpiarTexto(pendiente.palabra);
-      const url = `https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(capitalizar(posible))}`;
-      const respuesta = await fetch(url);
-
-      if (respuesta.ok) {
-        topic = posible;
-        break;
-      } else {
-        // Eliminar tema que no existe
-        await supabase.from('pendientes').delete().eq('palabra', posible);
-      }
-    }
-
+    // Buscar tema si no se especificó
     if (!topic) {
-      return res.status(200).json({ mensaje: 'No se encontró ningún tema válido en Wikipedia.' });
+      const { data: pendientes, error } = await supabase
+        .from('pendientes')
+        .select('palabra')
+        .order('creada_en', { ascending: true })
+        .limit(1);
+
+      if (error || !pendientes || pendientes.length === 0) {
+        return res.status(200).json({ mensaje: 'No hay temas pendientes por aprender.' });
+      }
+
+      topic = pendientes[0].palabra;
     }
 
+    topic = limpiarTexto(topic);
     const topicCapitalizado = capitalizar(topic);
-    const response = await fetch(`https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topicCapitalizado)}`);
+
+    const url = `https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topicCapitalizado)}`;
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      return res.status(404).json({ error: `No se encontró Wikipedia para el tema: ${topicCapitalizado}`, topic });
+    }
+
     const data = await response.json();
+    if (!data.extract) {
+      return res.status(404).json({ error: `No se encontró resumen para el tema: ${topicCapitalizado}`, topic });
+    }
 
     const texto = data.extract;
     const doc = nlp(texto);
@@ -74,26 +79,39 @@ export default async function handler(req, res) {
       nuevasPendientes.push(palabra);
     }
 
-    // Conexiones laterales
+    // Conexiones laterales (estructura tipo red)
     for (let i = 0; i < nuevasPendientes.length; i++) {
       for (let j = i + 1; j < nuevasPendientes.length; j++) {
         const palabra1 = nuevasPendientes[i];
         const palabra2 = nuevasPendientes[j];
 
-        await supabase.from('conexiones').upsert({
-          palabra1,
-          palabra2,
-          fuerza: 1
-        }, { onConflict: ['palabra1', 'palabra2'], ignoreDuplicates: false });
+        const { data: existente } = await supabase
+          .from('conexiones')
+          .select('fuerza')
+          .eq('palabra1', palabra1)
+          .eq('palabra2', palabra2)
+          .single();
+
+        if (existente) {
+          await supabase
+            .from('conexiones')
+            .update({ fuerza: existente.fuerza + 1 })
+            .eq('palabra1', palabra1)
+            .eq('palabra2', palabra2);
+        } else {
+          await supabase.from('conexiones').insert({
+            palabra1,
+            palabra2,
+            fuerza: 1
+          });
+        }
       }
     }
 
-    // Guardar nuevas pendientes
     for (const palabra of nuevasPendientes) {
       await supabase.from('pendientes').upsert({ palabra }, { onConflict: ['palabra'] });
     }
 
-    // Eliminar el topic procesado
     await supabase.from('pendientes').delete().eq('palabra', topic);
 
     res.status(200).json({
@@ -107,4 +125,4 @@ export default async function handler(req, res) {
     console.error('Error en el proceso:', error);
     res.status(500).json({ error: `Error en el proceso: ${error.message}` });
   }
-          }
+}
