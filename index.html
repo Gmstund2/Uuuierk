@@ -2,63 +2,61 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Auto-Aprendizaje</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-    }
-    input {
-      width: 300px;
-      padding: 10px;
-      font-size: 16px;
-    }
-    button {
-      padding: 10px 20px;
-      margin-left: 10px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aprendizaje Automático</title>
 </head>
 <body>
-
-  <h2>Autoaprendizaje desde Wikipedia</h2>
-
-  <input id="palabraInput" type="text" placeholder="Esperando sugerencia..." readonly />
-  <button onclick="buscarSugerencia()">Buscar siguiente</button>
+  <div>
+    <h1>Aprende de Wikipedia</h1>
+    <label for="topicInput">Escribe el tema o espera a la sugerencia automática:</label>
+    <input type="text" id="topicInput" placeholder="Escribe un tema o espera la sugerencia..." disabled>
+    <button id="startButton">Buscar Tema</button>
+    <h2>Sugerencia Automática:</h2>
+    <input type="text" id="suggestionInput" placeholder="La sugerencia aparecerá aquí..." readonly>
+    <p id="statusMessage"></p>
+  </div>
 
   <script>
-    async function buscarSugerencia() {
-      const input = document.getElementById('palabraInput');
-      input.value = 'Buscando...';
+    const startButton = document.getElementById('startButton');
+    const topicInput = document.getElementById('topicInput');
+    const suggestionInput = document.getElementById('suggestionInput');
+    const statusMessage = document.getElementById('statusMessage');
 
-      while (true) {
-        try {
-          const res = await fetch('/api/aprender'); // Ajusta si el endpoint es diferente
-          const json = await res.json();
+    // Inicia el proceso cuando el usuario presiona el botón
+    startButton.addEventListener('click', async () => {
+      statusMessage.textContent = 'Buscando...';
 
-          if (json.sugerencia && json.sugerencia.length > 0) {
-            input.value = json.sugerencia;
-            console.log('Aprendido:', json.mensaje);
-            break;
-          }
+      const topic = topicInput.value.trim();
 
-          if (json.mensaje && json.mensaje.includes('No hay temas')) {
-            input.value = 'No hay temas pendientes.';
-            break;
-          }
-
-          await new Promise(resolve => setTimeout(resolve, 1500)); // Espera 1.5 segundos antes de volver a intentar
-
-        } catch (e) {
-          input.value = 'Error al buscar.';
-          console.error(e);
-          break;
-        }
+      if (!topic) {
+        statusMessage.textContent = 'Por favor, ingresa un tema primero.';
+        return;
       }
-    }
-  </script>
 
+      try {
+        const response = await fetch(`/api/learnFromWikipedia?topic=${topic}`);
+        const data = await response.json();
+
+        if (data.error) {
+          statusMessage.textContent = `Error: ${data.error}`;
+        } else {
+          suggestionInput.value = data.sugerencia || 'No se encontró una sugerencia';
+          statusMessage.textContent = `Aprendí sobre ${topic} y la sugerencia es: ${data.sugerencia}`;
+        }
+      } catch (error) {
+        console.error('Error al buscar el tema:', error);
+        statusMessage.textContent = 'Hubo un error en el proceso de búsqueda.';
+      }
+    });
+
+    // Función para habilitar el campo de entrada del tema si es necesario
+    function enableTopicInput() {
+      topicInput.disabled = false;
+      statusMessage.textContent = 'Ingresa un tema para empezar la búsqueda.';
+    }
+
+    // Habilitar el input de tema para que el usuario pueda escribir
+    enableTopicInput();
+  </script>
 </body>
 </html>
