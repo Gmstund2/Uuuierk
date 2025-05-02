@@ -35,16 +35,23 @@ async function procesarTema(topic) {
       idioma: 'es'
     });
 
-    nuevasPendientes.push(palabra);
+    if (palabra !== topic.toLowerCase()) {
+      nuevasPendientes.push(palabra);
+    }
   }
 
-  // Guardar nuevas pendientes
+  // Insertar nuevas pendientes, evitando duplicados
   for (const palabra of nuevasPendientes) {
-    await supabase.from('pendientes').upsert({ palabra }, { onConflict: ['palabra'] });
+    await supabase
+      .from('pendientes')
+      .upsert({ palabra }, { onConflict: ['palabra'] });
   }
 
-  // Eliminar la pendiente actual
-  await supabase.from('pendientes').delete().eq('palabra', topic);
+  // Eliminar la palabra procesada de pendientes
+  await supabase
+    .from('pendientes')
+    .delete()
+    .eq('palabra', topic.toLowerCase());
 
   return {
     mensaje: `Aprendí sobre ${topic}`,
@@ -57,7 +64,6 @@ export default async function handler(req, res) {
   try {
     let { topic } = req.query;
 
-    // Si no hay topic, obtener uno de la tabla pendientes
     if (!topic) {
       const { data: pendientes } = await supabase
         .from('pendientes')
@@ -69,7 +75,6 @@ export default async function handler(req, res) {
         return res.status(200).json({ mensaje: 'No hay temas pendientes por aprender.' });
       }
 
-      // Intentar con cada palabra pendiente hasta que una funcione
       for (const item of pendientes) {
         try {
           const resultado = await procesarTema(item.palabra);
@@ -79,11 +84,9 @@ export default async function handler(req, res) {
         }
       }
 
-      return res.status(500).json({ error: 'Ninguna de las palabras pendientes funcionó.' });
-
+      return res.status(500).json({ error: 'Ninguna palabra pendiente funcionó.' });
     } else {
-      // Si se recibe un topic directo
-      const resultado = await procesarTema(topic);
+      const resultado = await procesarTema(topic.toLowerCase());
       return res.status(200).json(resultado);
     }
 
@@ -91,4 +94,4 @@ export default async function handler(req, res) {
     console.error('Error en el proceso general:', error);
     res.status(500).json({ error: `Error en el proceso: ${error.message}` });
   }
-      }
+                            }
