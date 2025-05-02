@@ -1,62 +1,40 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aprendizaje Automático</title>
+  <meta charset="UTF-8" />
+  <title>Aprender desde Wikipedia</title>
 </head>
 <body>
-  <div>
-    <h1>Aprende de Wikipedia</h1>
-    <label for="topicInput">Escribe el tema o espera a la sugerencia automática:</label>
-    <input type="text" id="topicInput" placeholder="Escribe un tema o espera la sugerencia..." disabled>
-    <button id="startButton">Buscar Tema</button>
-    <h2>Sugerencia Automática:</h2>
-    <input type="text" id="suggestionInput" placeholder="La sugerencia aparecerá aquí..." readonly>
-    <p id="statusMessage"></p>
-  </div>
+  <h1>Aprender desde Wikipedia</h1>
+  <button id="learnBtn">Aprender una palabra</button>
+  <p id="mensaje"></p>
+  <ul id="palabras"></ul>
 
   <script>
-    const startButton = document.getElementById('startButton');
-    const topicInput = document.getElementById('topicInput');
-    const suggestionInput = document.getElementById('suggestionInput');
-    const statusMessage = document.getElementById('statusMessage');
-
-    // Inicia el proceso cuando el usuario presiona el botón
-    startButton.addEventListener('click', async () => {
-      statusMessage.textContent = 'Buscando...';
-
-      const topic = topicInput.value.trim();
-
-      if (!topic) {
-        statusMessage.textContent = 'Por favor, ingresa un tema primero.';
-        return;
-      }
+    document.getElementById('learnBtn').addEventListener('click', async () => {
+      const mensajeEl = document.getElementById('mensaje');
+      const lista = document.getElementById('palabras');
+      mensajeEl.textContent = 'Cargando...';
+      lista.innerHTML = '';
 
       try {
-        const response = await fetch(`/api/learnFromWikipedia?topic=${topic}`);
-        const data = await response.json();
+        const res = await fetch('https://TU_DEPLOY.vercel.app/api/learnFromWikipedia');
+        const data = await res.json();
 
-        if (data.error) {
-          statusMessage.textContent = `Error: ${data.error}`;
+        if (res.ok) {
+          mensajeEl.textContent = data.mensaje;
+          if (data.sugerencia) {
+            const li = document.createElement('li');
+            li.textContent = data.sugerencia;
+            lista.appendChild(li);
+          }
         } else {
-          suggestionInput.value = data.sugerencia || 'No se encontró una sugerencia';
-          statusMessage.textContent = `Aprendí sobre ${topic} y la sugerencia es: ${data.sugerencia}`;
+          mensajeEl.textContent = data.error || 'Error desconocido';
         }
-      } catch (error) {
-        console.error('Error al buscar el tema:', error);
-        statusMessage.textContent = 'Hubo un error en el proceso de búsqueda.';
+      } catch (err) {
+        mensajeEl.textContent = 'Error al conectar con la API.';
       }
     });
-
-    // Función para habilitar el campo de entrada del tema si es necesario
-    function enableTopicInput() {
-      topicInput.disabled = false;
-      statusMessage.textContent = 'Ingresa un tema para empezar la búsqueda.';
-    }
-
-    // Habilitar el input de tema para que el usuario pueda escribir
-    enableTopicInput();
   </script>
 </body>
 </html>
