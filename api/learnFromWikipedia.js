@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 import fetch from 'node-fetch';
 import nlp from 'compromise';
@@ -23,8 +24,11 @@ export default async function handler(req, res) {
       topic = pendientes[0].palabra;
     }
 
+    topic = topic.trim().replace(/[.,;:()¿?¡!"“”]/g, '');
+    const cleanTopic = topic;
+
     // Obtener resumen de Wikipedia
-    const url = `https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topic)}`;
+    const url = `https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(cleanTopic)}`;
     const response = await fetch(url);
 
     if (!response.ok) {
@@ -32,15 +36,14 @@ export default async function handler(req, res) {
     }
 
     const data = await response.json();
-    if (!data.extract) return res.status(404).json({ error: 'Tema no encontrado' });
+    if (!data.extract) return res.status(404).json({ error: `No se encontró Wikipedia para el tema: ${cleanTopic}`, topic: cleanTopic });
 
     const texto = data.extract;
     const doc = nlp(texto);
     const terms = doc.terms().json();
 
-    let nuevasPendientes = [];
+    let nuevasPalabras = [];
 
-    // Insertar las palabras nuevas en el lexicon y conectar con el topic
     for (const term of terms) {
       let palabra = term.text.toLowerCase().replace(/[.,;:()¿?¡!"“”]/g, '').trim();
       if (palabra.length < 3 || palabra === topic.toLowerCase()) continue;
@@ -63,52 +66,50 @@ export default async function handler(req, res) {
         idioma: 'es'
       });
 
-      nuevasPendientes.push(palabra);
+      nuevasPalabras.push(palabra);
     }
 
     // Insertar en pendientes sin repetir
-    for (const palabra of nuevasPendientes) {
+    for (const palabra of nuevasPalabras) {
       await supabase.from('pendientes').upsert({ palabra }, { onConflict: ['palabra'] });
+    }
+
+    // Insertar conexiones laterales entre palabras nuevas
+    for (let i = 0; i < nuevasPalabras.length; i++) {
+      for (let j = i + 1; j < nuevasPalabras.length; j++) {
+        const palabraA = nuevasPalabras[i];
+        const palabraB = nuevasPalabras[j];
+
+        await supabase.from('relaciones').upsert({
+          palabra_a: palabraA,
+          palabra_b: palabraB,
+          contexto: topic,
+          fuerza: 1
+        }, {
+          onConflict: ['palabra_a', 'palabra_b', 'contexto'],
+          ignoreDuplicates: false
+        });
+
+        // Inserta también la conexión inversa para simetría
+        await supabase.from('relaciones').upsert({
+          palabra_a: palabraB,
+          palabra_b: palabraA,
+          contexto: topic,
+          fuerza: 1
+        }, {
+          onConflict: ['palabra_a', 'palabra_b', 'contexto'],
+          ignoreDuplicates: false
+        });
+      }
     }
 
     // Eliminar el topic procesado
     await supabase.from('pendientes').delete().eq('palabra', topic);
 
-    // Ciclo para crear conexiones entre las palabras nuevas
-    for (let i = 0; i < nuevasPendientes.length; i++) {
-      for (let j = i + 1; j < nuevasPendientes.length; j++) {
-        let palabra1 = nuevasPendientes[i];
-        let palabra2 = nuevasPendientes[j];
-        
-        // Revisa si ya existe una conexión entre estas dos palabras
-        const { data: conexionExistente } = await supabase
-          .from('conexiones')
-          .select('*')
-          .eq('palabra_1', palabra1)
-          .eq('palabra_2', palabra2)
-          .limit(1);
-        
-        if (conexionExistente && conexionExistente.length > 0) {
-          // Si ya existe, incrementa la fuerza de la relación
-          await supabase
-            .from('conexiones')
-            .update({ fuerza: conexionExistente[0].fuerza + 1 })
-            .eq('id', conexionExistente[0].id);
-        } else {
-          // Si no existe, crea una nueva conexión con fuerza 1
-          await supabase
-            .from('conexiones')
-            .insert([
-              { palabra_1: palabra1, palabra_2: palabra2, fuerza: 1 }
-            ]);
-        }
-      }
-    }
-
     res.status(200).json({
-      mensaje: `Aprendí sobre ${topic}`,
-      palabras: nuevasPendientes.length,
-      sugerencia: nuevasPendientes[0] || '',
+      mensaje: `Aprendí sobre "${topic}"`,
+      palabras: nuevasPalabras.length,
+      sugerencia: nuevasPalabras[0] || '',
       topic
     });
 
