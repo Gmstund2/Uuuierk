@@ -3,7 +3,7 @@ name: Cron Job to Learn New Word
 
 on:
   schedule:
-    - cron: '*/3 * * * *'  # Ejecuta cada 3 minutos
+    - cron: '*/3 * * * *'  
 
 jobs:
   cronJob:
