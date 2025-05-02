@@ -26,24 +26,22 @@ export default async function handler(req, res) {
       topic = pendientes[0].palabra;
     }
 
-    console.log('Tópico a procesar:', topic);
-
-    // Obtener resumen de Wikipedia
-    const url = `https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topic)}`;
+    const topicCapitalizado = topic.charAt(0).toUpperCase() + topic.slice(1);
+    const url = `https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topicCapitalizado)}`;
     const response = await fetch(url);
 
     if (!response.ok) {
       return res.status(404).json({ 
-        error: `No se encontró Wikipedia para el tema: ${topic}`,
-        topic
+        error: `No se encontró Wikipedia para el tema: ${topicCapitalizado}`,
+        topic: topicCapitalizado
       });
     }
 
     const data = await response.json();
     if (!data.extract) {
       return res.status(404).json({ 
-        error: `El tema ${topic} no tiene contenido en Wikipedia.`,
-        topic
+        error: `El tema ${topicCapitalizado} no tiene contenido en Wikipedia.`,
+        topic: topicCapitalizado
       });
     }
 
@@ -83,10 +81,10 @@ export default async function handler(req, res) {
     await supabase.from('pendientes').delete().eq('palabra', topic);
 
     res.status(200).json({
-      mensaje: `Aprendí sobre "${topic}"`,
+      mensaje: `Aprendí sobre "${topicCapitalizado}"`,
       palabras: nuevasPendientes.length,
       sugerencia: nuevasPendientes[0] || '',
-      topic
+      topic: topicCapitalizado
     });
 
   } catch (error) {
