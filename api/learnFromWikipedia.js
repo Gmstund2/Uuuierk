@@ -46,9 +46,10 @@ export default async function handler(req, res) {
     const terms = doc.terms().json();
 
     let nuevasPendientes = [];
+
     for (const term of terms) {
       const palabra = term.text.toLowerCase();
-      if (palabra.length < 3) continue;
+      if (palabra.length < 3 || palabra === topic.toLowerCase()) continue;
 
       await supabase.from('lexicon').insert({
         palabra,
@@ -67,7 +68,7 @@ export default async function handler(req, res) {
 
     await supabase.from('pendientes').delete().eq('palabra', topic);
 
-    const sugerencia = nuevasPendientes[0] || null;
+    const sugerencia = nuevasPendientes.find(p => p !== topic.toLowerCase()) || null;
 
     res.status(200).json({
       status: 'ok',
@@ -80,4 +81,4 @@ export default async function handler(req, res) {
     console.error('Error en el proceso:', error);
     res.status(500).json({ status: 'error', error: `Error en el proceso: ${error.message}` });
   }
-}
+  }
