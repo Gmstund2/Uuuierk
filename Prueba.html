@@ -33,17 +33,18 @@
 
   <script>
     async function sendTopic() {
-      const topic = document.getElementById('topic').value;
+      const topicInput = document.getElementById('topic');
+      const topic = topicInput.value;
+      const responseElement = document.getElementById('response');
+
       if (!topic) {
         alert('Por favor, ingresa un tema');
         return;
       }
 
-      const responseElement = document.getElementById('response');
       responseElement.innerHTML = 'Cargando...';
 
       try {
-        // Realizamos la solicitud a la API de Vercel
         const response = await fetch(`/api/learnFromWikipedia?topic=${encodeURIComponent(topic)}`);
         
         if (!response.ok) {
@@ -56,6 +57,11 @@
           responseElement.innerHTML = `Error: ${data.error}`;
         } else {
           responseElement.innerHTML = `¡Aprendí sobre ${topic}! Se procesaron ${data.palabras} palabras.`;
+
+          // Reemplazar el valor del input con la sugerencia
+          if (data.sugerencia) {
+            topicInput.value = data.sugerencia;
+          }
         }
       } catch (error) {
         responseElement.innerHTML = `Error: ${error.message}`;
