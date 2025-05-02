@@ -1,13 +1,14 @@
 {
-  "name": "alma",
+  "name": "learn-from-wikipedia",
   "version": "1.0.0",
   "type": "module",
-  "dependencies": {
-    "@supabase/supabase-js": "^2.39.5",
-    "node-fetch": "2.6.9",
-    "compromise": "^13.11.3"
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
   },
-  "resolutions": {
-    "node-fetch": "2.6.9"
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.6",
+    "compromise": "^13.11.3",
+    "node-fetch": "^3.3.2"
   }
 }
