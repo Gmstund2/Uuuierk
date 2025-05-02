@@ -6,7 +6,6 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANO
 
 export default async function handler(req, res) {
   try {
-    // 1. Tomar el tema desde query o desde la tabla 'pendientes'
     let { topic } = req.query;
 
     if (!topic) {
@@ -37,13 +36,10 @@ export default async function handler(req, res) {
     const doc = nlp(texto);
     const terms = doc.terms().json();
 
-    // Insertar palabras en 'lexicon' y añadir nuevas a 'pendientes'
     let nuevasPendientes = [];
-
     for (const term of terms) {
       const palabra = term.text.toLowerCase();
-
-      if (palabra.length < 3) continue; // Ignorar palabras muy cortas (artículos, preposiciones)
+      if (palabra.length < 3) continue;
 
       await supabase.from('lexicon').insert({
         palabra,
@@ -56,23 +52,20 @@ export default async function handler(req, res) {
       nuevasPendientes.push(palabra);
     }
 
-    // Insertar nuevas palabras en la tabla de pendientes (si no existen)
     for (const palabra of nuevasPendientes) {
-      await supabase
-        .from('pendientes')
-        .upsert({ palabra }, { onConflict: ['palabra'] });
+      await supabase.from('pendientes').upsert({ palabra }, { onConflict: ['palabra'] });
     }
 
-    // Eliminar el tema aprendido de pendientes
-    await supabase
-      .from('pendientes')
-      .delete()
-      .eq('palabra', topic);
+    await supabase.from('pendientes').delete().eq('palabra', topic);
 
-    res.status(200).json({ mensaje: `Aprendí sobre ${topic}`, palabras: terms.length });
+    res.status(200).json({
+      mensaje: `Aprendí sobre ${topic}`,
+      palabras: terms.length,
+      sugerencia: nuevasPendientes[0] || ''
+    });
 
   } catch (error) {
     console.error('Error en el proceso:', error);
     res.status(500).json({ error: `Error en el proceso: ${error.message}` });
   }
-  }
+}
