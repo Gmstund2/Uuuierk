@@ -1,1 +1,16 @@
+name: Cron Job to Learn New Word
 
+on:
+  schedule:
+      - cron: '*/3 * * * *'  # Ejecuta cada 3 minutos
+
+      jobs:
+        cronJob:
+            runs-on: ubuntu-latest
+                steps:
+                      - name: Checkout code
+                              uses: actions/checkout@v2
+                                    
+                                          - name: Trigger Vercel Function
+                                                  run: |
+                                                            curl -X GET https://uuuierk.vercel.app/api/cron
