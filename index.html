@@ -2,93 +2,70 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Aprender de Wikipedia</title>
+  <title>Aprendiz de Wikipedia</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
+      font-family: sans-serif;
+      padding: 2rem;
     }
     input {
-      padding: 10px;
-      font-size: 16px;
+      padding: 0.5rem;
       width: 100%;
-      margin-top: 10px;
-      box-sizing: border-box;
-    }
-    label {
-      margin-top: 15px;
-      display: block;
+      margin: 0.5rem 0;
     }
     button {
-      padding: 10px 20px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      cursor: pointer;
-      margin-top: 20px;
-    }
-    button:hover {
-      background-color: #45a049;
-    }
-    .loading {
-      margin-top: 20px;
-      color: #4CAF50;
+      padding: 0.5rem 1rem;
     }
   </style>
 </head>
 <body>
-  <h1>Aprende automáticamente desde Wikipedia</h1>
+  <h1>Aprender desde Wikipedia</h1>
 
-  <!-- Input solo lectura con sugerencia -->
-  <label for="sugerenciaInput">Sugerencia automática:</label>
-  <input type="text" id="sugerenciaInput" readonly />
+  <label for="temaManual">Buscar tema manual:</label>
+  <input type="text" id="temaManual" placeholder="Escribe un tema (opcional)">
+  <button onclick="aprender()">Aprender</button>
 
-  <!-- Input editable del usuario -->
-  <label for="usuarioInput">Escribe tu propio tema (opcional):</label>
-  <input type="text" id="usuarioInput" placeholder="Puedes escribir un tema aquí..." />
+  <hr>
 
-  <div class="loading" id="loadingText" style="display:none;">Buscando tema...</div>
+  <div id="resultado"></div>
+
+  <label for="sugerenciaInput">Siguiente sugerencia (auto):</label>
+  <input type="text" id="sugerenciaInput" readonly>
 
   <script>
-    document.addEventListener('DOMContentLoaded', async function () {
-      const sugerenciaInput = document.getElementById('sugerenciaInput');
-      const usuarioInput = document.getElementById('usuarioInput');
-      const loadingText = document.getElementById('loadingText');
+    async function aprender(tema = '') {
+      try {
+        const query = tema ? `?topic=${encodeURIComponent(tema)}` : '';
+        const res = await fetch('/api/learnFromWikipedia' + query);
+        const data = await res.json();
 
-      // Primera llamada para obtener sugerencia
-      const res = await fetch('/api/learnFromWikipedia');
-      const data = await res.json();
-      const sugerencia = data.sugerencia || '';
+        console.log('Respuesta del backend:', data);
 
-      sugerenciaInput.value = sugerencia;
+        document.getElementById('resultado').innerText = data.mensaje || 'Sin mensaje';
 
-      setTimeout(async () => {
-        let valorUsuario = usuarioInput.value.trim();
+        if (data.sugerencia) {
+          document.getElementById('sugerenciaInput').value = data.sugerencia;
 
-        // Si el usuario no escribió nada, usamos la sugerencia
-        if (!valorUsuario && sugerencia) {
-          usuarioInput.value = sugerencia; // la pegamos en el input editable
-          valorUsuario = sugerencia;
+          setTimeout(() => {
+            aprender(data.sugerencia);
+          }, 10000); // Espera 10 segundos y repite
+        } else {
+          document.getElementById('sugerenciaInput').value = '';
         }
+      } catch (error) {
+        console.error('Error en frontend:', error);
+        document.getElementById('resultado').innerText = 'Error en el proceso';
+      }
+    }
 
-        if (!valorUsuario) {
-          alert('No hay tema para buscar');
-          return;
-        }
-
-        loadingText.style.display = 'block';
-
-        try {
-          const buscar = await fetch(`/api/learnFromWikipedia?topic=${encodeURIComponent(valorUsuario)}`);
-          const resultado = await buscar.json();
-          alert(resultado.mensaje || 'Búsqueda completada');
-        } catch (err) {
-          alert('Error al buscar el tema');
-        } finally {
-          loadingText.style.display = 'none';
-        }
-      }, 10000); // después de 10 segundos
+    // También permite lanzar manualmente desde el input
+    document.querySelector('button').addEventListener('click', () => {
+      const tema = document.getElementById('temaManual').value.trim();
+      aprender(tema);
     });
+
+    // Lanza una primera búsqueda automáticamente
+    aprender();
   </script>
 </body>
 </html>
