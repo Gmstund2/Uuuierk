@@ -1,72 +1,102 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aprender desde Wikipedia</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      background-color: #f9f9f9;
-    }
+import { createClient } from '@supabase/supabase-js';
+import fetch from 'node-fetch';
+import nlp from 'compromise';
 
-    input, button {
-      padding: 10px;
-      font-size: 16px;
-      margin: 10px 0;
-    }
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
-    #response {
-      margin-top: 20px;
-    }
-  </style>
-</head>
-<body>
-  <h1>Aprender un tema desde Wikipedia</h1>
-  
-  <label for="topic">Escribe un tema (por ejemplo, 'amor'): </label>
-  <input type="text" id="topic" placeholder="Tema para aprender...">
-  <button onclick="sendTopic()">Aprender</button>
+async function getNextPendingTopic() {
+  const { data, error } = await supabase
+    .from('pendientes')
+    .select('palabra')
+    .order('creada_en', { ascending: true })
+    .limit(1);
 
-  <div id="response"></div>
+  if (error || !data || data.length === 0) return null;
+  return data[0].palabra;
+}
 
-  <script>
-    async function sendTopic() {
-      const topicInput = document.getElementById('topic');
-      const topic = topicInput.value;
-      const responseElement = document.getElementById('response');
+async function procesar(topic) {
+  const url = `https://es.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topic)}`;
+  const response = await fetch(url);
 
-      if (!topic) {
-        alert('Por favor, ingresa un tema');
-        return;
-      }
+  if (!response.ok) throw new Error(`Error al obtener Wikipedia: ${response.statusText}`);
 
-      responseElement.innerHTML = 'Cargando...';
+  const data = await response.json();
+  if (!data.extract) throw new Error('Tema no encontrado');
 
+  const texto = data.extract;
+  const doc = nlp(texto);
+  const terms = doc.terms().json();
+
+  const nuevasPendientes = [];
+
+  for (const term of terms) {
+    let palabra = term.text.toLowerCase().replace(/[.,;:()¿?¡!"“”]/g, '').trim();
+    if (palabra.length < 3 || palabra === topic.toLowerCase()) continue;
+
+    const { data: existe } = await supabase
+      .from('lexicon')
+      .select('palabra')
+      .eq('palabra', palabra)
+      .limit(1);
+
+    if (existe && existe.length > 0) continue;
+
+    await supabase.from('lexicon').insert({
+      palabra,
+      tipo: term.bestTag || 'desconocido',
+      ejemplo_uso: texto,
+      relacionado_a: topic,
+      idioma: 'es'
+    });
+
+    nuevasPendientes.push(palabra);
+  }
+
+  for (const palabra of nuevasPendientes) {
+    await supabase.from('pendientes').upsert({ palabra }, { onConflict: ['palabra'] });
+  }
+
+  await supabase.from('pendientes').delete().eq('palabra', topic);
+
+  return nuevasPendientes[0] || '';
+}
+
+export default async function learnFromWikipedia(req, res) {
+  try {
+    let topic = req.query.topic;
+
+    if (!topic) topic = await getNextPendingTopic();
+    if (!topic) return res.status(200).json({ mensaje: 'No hay temas pendientes.' });
+
+    let intentos = 0;
+    let sugerencia = '';
+    let error = null;
+
+    while (intentos < 5 && !sugerencia) {
       try {
-        const response = await fetch(`/api/learnFromWikipedia?topic=${encodeURIComponent(topic)}`);
-        
-        if (!response.ok) {
-          throw new Error('Error al obtener datos desde Wikipedia');
-        }
-
-        const data = await response.json();
-
-        if (data.error) {
-          responseElement.innerHTML = `Error: ${data.error}`;
-        } else {
-          responseElement.innerHTML = `¡Aprendí sobre ${topic}! Se procesaron ${data.palabras} palabras.`;
-
-          // Reemplazar el valor del input con la sugerencia
-          if (data.sugerencia) {
-            topicInput.value = data.sugerencia;
-          }
-        }
-      } catch (error) {
-        responseElement.innerHTML = `Error: ${error.message}`;
+        sugerencia = await procesar(topic);
+      } catch (err) {
+        console.log(`Error con "${topic}":`, err.message);
+        await supabase.from('pendientes').delete().eq('palabra', topic);
+        topic = await getNextPendingTopic();
+        if (!topic) break;
+        error = err.message;
       }
+      intentos++;
     }
-  </script>
-</body>
-</html>
+
+    if (!sugerencia) {
+      return res.status(500).json({ error: `No se pudo procesar un tema válido. Último error: ${error}` });
+    }
+
+    res.status(200).json({
+      mensaje: `Aprendí sobre ${topic}`,
+      sugerencia
+    });
+
+  } catch (err) {
+    console.error('Error fatal:', err.message);
+    res.status(500).json({ error: `Error fatal: ${err.message}` });
+  }
+}
