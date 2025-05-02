@@ -2,93 +2,63 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Autoaprendizaje Wikipedia</title>
+  <title>Auto-Aprendizaje</title>
   <style>
     body {
-      font-family: sans-serif;
-      background: #f4f4f4;
+      font-family: Arial, sans-serif;
       padding: 20px;
-    }
-    .container {
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      max-width: 600px;
-      margin: auto;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
     input {
+      width: 300px;
       padding: 10px;
-      width: 100%;
-      margin-top: 10px;
+      font-size: 16px;
     }
     button {
-      padding: 10px;
-      margin-top: 10px;
-      background: #007bff;
-      color: white;
-      border: none;
-      width: 100%;
+      padding: 10px 20px;
+      margin-left: 10px;
+      font-size: 16px;
       cursor: pointer;
-    }
-    #resultado {
-      margin-top: 20px;
-      padding: 10px;
-      background: #e9ffe9;
-      border: 1px solid #b2ffb2;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Aprendizaje Automático de Wikipedia</h2>
-    <input type="text" id="inputManual" placeholder="Escribe una palabra para aprender...">
-    <button onclick="buscar()">Aprender ahora</button>
-    <input type="text" id="inputAuto" placeholder="Auto-sugerencia..." readonly>
-    <div id="resultado"></div>
-  </div>
+
+  <h2>Autoaprendizaje desde Wikipedia</h2>
+
+  <input id="palabraInput" type="text" placeholder="Esperando sugerencia..." readonly />
+  <button onclick="buscarSugerencia()">Buscar siguiente</button>
 
   <script>
-    async function buscar(palabraManual = null) {
-      const inputManual = document.getElementById("inputManual");
-      const inputAuto = document.getElementById("inputAuto");
-      const resultado = document.getElementById("resultado");
+    async function buscarSugerencia() {
+      const input = document.getElementById('palabraInput');
+      input.value = 'Buscando...';
 
-      let palabra = palabraManual || inputManual.value.trim();
-      if (!palabra) {
-        palabra = inputAuto.value.trim();
-      }
+      while (true) {
+        try {
+          const res = await fetch('/api/aprender'); // Ajusta si el endpoint es diferente
+          const json = await res.json();
 
-      if (!palabra) return;
+          if (json.sugerencia && json.sugerencia.length > 0) {
+            input.value = json.sugerencia;
+            console.log('Aprendido:', json.mensaje);
+            break;
+          }
 
-      try {
-        const res = await fetch(`/api/learnFromWikipedia?topic=${encodeURIComponent(palabra)}`);
-        const data = await res.json();
+          if (json.mensaje && json.mensaje.includes('No hay temas')) {
+            input.value = 'No hay temas pendientes.';
+            break;
+          }
 
-        if (data.status === 'done') {
-          resultado.innerText = "No hay más temas pendientes.";
-          inputAuto.value = '';
-          return;
+          await new Promise(resolve => setTimeout(resolve, 1500)); // Espera 1.5 segundos antes de volver a intentar
+
+        } catch (e) {
+          input.value = 'Error al buscar.';
+          console.error(e);
+          break;
         }
-
-        resultado.innerText = data.mensaje || "Aprendizaje completado.";
-        if (data.sugerencia) {
-          inputAuto.value = data.sugerencia;
-        }
-      } catch (err) {
-        resultado.innerText = "Error: " + err.message;
       }
     }
-
-    // Ejecutar cada 10 segundos si hay sugerencia
-    setInterval(() => {
-      const inputAuto = document.getElementById("inputAuto");
-      if (inputAuto.value.trim()) {
-        buscar(inputAuto.value.trim());
-      } else {
-        buscar(); // usará la tabla 'pendientes' si no hay sugerencia previa
-      }
-    }, 10000);
   </script>
+
 </body>
 </html>
